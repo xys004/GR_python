@@ -30,18 +30,18 @@ on multi-core Linux machines.
 
 | Cell | Action |
 |---|---|
-| **Cell 1** | Install LaTeX + Python packages (once per session) |
+| **Cell 1** | Install LaTeX + Python packages and verify `pdflatex` |
 | **Cell 2** | Clone the GitHub repo and detect GPU backend |
 | **Cell 3** | **Edit this cell** — set your metric, coordinates, and flags |
 | **Cell 4** | Run all symbolic GR computations |
-| **Cell 5** | Generate PDF report (downloads to `/content/gr_report.pdf`) |
+| **Cell 5** | Compare the computed tensor with the document formulas and generate `.tex`/PDF |
 | **Cell 6** | Numerical evaluation of GR scalars on a coordinate grid |
 | **Cell 7** | 2-D heat maps of GR scalars |
 | **Cell 8** | Geodesic integration and trajectory plot |
 
 ---
 
-## Changing the Metric
+## Choosing the Document Variant
 
 Edit **Cell 3** in the notebook. The pattern is:
 
