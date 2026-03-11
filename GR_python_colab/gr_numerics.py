@@ -164,7 +164,7 @@ def evaluate_scalar_grid(fn, coord_vals):
     return values
 
 
-def evaluate_results_numerical(results, coords, coord_ranges, npts=50):
+def evaluate_results_numerical(results, coords, coord_ranges, npts=50, parameter_subs=None):
     """
     Lambdify and evaluate key GR scalars on a coordinate grid.
 
@@ -195,6 +195,8 @@ def evaluate_results_numerical(results, coords, coord_ranges, npts=50):
         val = results.get(key)
         if val is None:
             continue
+        if parameter_subs:
+            val = val.subs(parameter_subs)
         fn = lambdify_scalar(val, coords, backend)
         try:
             num_results[key] = evaluate_scalar_grid(fn, grid_1d)
