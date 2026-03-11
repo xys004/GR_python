@@ -20,18 +20,18 @@ on multi-core Linux machines.
 
 ## Quick Start
 
-### 1. Upload to Google Colab
+### 1. Open in Google Colab
 
 1. Go to [colab.research.google.com](https://colab.research.google.com)
 2. Open `GR_Colab.ipynb` (File → Upload notebook)
-3. Upload all five `.py` files to `/content/` via the Files panel or Cell 2
+3. Run Cell 2 to clone the repo and load the Colab modules automatically
 
 ### 2. Run cells in order
 
 | Cell | Action |
 |---|---|
 | **Cell 1** | Install LaTeX + Python packages (once per session) |
-| **Cell 2** | Upload modules and detect GPU backend |
+| **Cell 2** | Clone the GitHub repo and detect GPU backend |
 | **Cell 3** | **Edit this cell** — set your metric, coordinates, and flags |
 | **Cell 4** | Run all symbolic GR computations |
 | **Cell 5** | Generate PDF report (downloads to `/content/gr_report.pdf`) |
@@ -84,7 +84,7 @@ To enable GPU:
    ```
 3. In Cell 3, set `grm.USE_GPU = True`
 
-The `grn.detect_backend()` call in Cell 2 confirms which backend is active.
+The `grn.detect_backend()` call in Cell 2 confirms which backend is active after the repo is cloned.
 
 ---
 
