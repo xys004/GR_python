@@ -343,20 +343,33 @@ def matrix_to_component_list(mat, row_labels, col_labels, tensor_name):
     Used when matrix entries are too long to display in a pmatrix without
     overflowing the page (triggered by matrix_is_complex()).
 
-    Each non-zero entry T_{row col} = expr is rendered via split_long_equation,
-    so even very long entries are handled gracefully.
+    Each non-zero entry is rendered via split_long_equation, so even very
+    long entries are handled gracefully. The tensor_name argument is mapped
+    to the appropriate covariant / contravariant notation for the known
+    tensors used by this report.
 
     Parameters
     ----------
     mat         : sympy.Matrix
-    row_labels  : list of str  — LaTeX index label for each row    (e.g. ['t','r',r'\\theta',r'\\varphi'])
+    row_labels  : list of str  — LaTeX index label for each row
     col_labels  : list of str  — LaTeX index label for each column
-    tensor_name : str          — LaTeX symbol for the tensor (e.g. 'g', 'R', 'G')
+    tensor_name : str          — symbolic tensor label (e.g. 'g', 'g^', 'e')
 
     Returns
     -------
     list of str — LaTeX lines (sequence of dmath*/multline* blocks)
     """
+    def component_lhs(row_label, col_label):
+        if tensor_name == 'g^':
+            return f'g^{{{row_label}{col_label}}}'
+        if tensor_name in {'g', 'R', 'G', r'\hat{G}', r'\Delta'}:
+            return f'{tensor_name}_{{{row_label}{col_label}}}'
+        if tensor_name == 'E':
+            return f'E^{{{row_label}}}_{{{col_label}}}'
+        if tensor_name == 'e':
+            return f'e^{{{row_label}}}_{{{col_label}}}'
+        return f'{tensor_name}_{{{row_label}{col_label}}}'
+
     out = [r'\par\noindent\textit{Non-zero components (matrix form exceeds page width):}']
     has_any = False
     for i in range(mat.rows):
@@ -369,7 +382,7 @@ def matrix_to_component_list(mat, row_labels, col_labels, tensor_name):
             if entry == S.Zero:
                 continue
             has_any = True
-            lhs_str = f'{tensor_name}_{{{row_labels[i]}{col_labels[j]}}}'
+            lhs_str = component_lhs(row_labels[i], col_labels[j])
             rhs_str = latex(entry)
             out += split_long_equation(lhs_str, rhs_str)
     if not has_any:
@@ -1008,6 +1021,7 @@ def assemble_report(results, coords, dim, metric_name, description,
 
         RL.append(r'\subsection{Weak Energy Condition (WEC)}')
         RL.append(r'WEC: $\rho \geq 0$ (energy density non-negative) and NEC.')
+        RL += split_long_equation(r'\rho', lat(ec['WEC_rho']))
 
         RL.append(r'\subsection{Strong Energy Condition (SEC)}')
         RL.append(r'SEC: $\rho + \sum_i p_i \geq 0$.')
@@ -1022,6 +1036,8 @@ def assemble_report(results, coords, dim, metric_name, description,
             r'\textit{(The DEC requires knowledge of the sign of $\rho$ relative '
             r'to $|p_i|$; substitute explicit parameter values to evaluate.)}'
         )
+        for i, dec_expr in enumerate(ec.get('DEC', [])):
+            RL += split_long_equation(rf'\rho - |p_{i+1}|', lat(dec_expr))
     else:
         RL.append(
             r'\textit{Energy conditions require an orthonormal tetrad. '
@@ -1160,16 +1176,22 @@ def assemble_report(results, coords, dim, metric_name, description,
     RL.append(r'Verify $g^{\mu\rho}\,g_{\rho\nu} = \delta^\mu{}_\nu$.')
     product_check = R['ginv'] * R['g']
     id_residual = product_check - eye(dim)
-    max_res = max(abs(cancel(id_residual[i, j]))
-                  for i in range(dim) for j in range(dim))
-    if max_res == S.Zero:
+    residual_entries = [cancel(id_residual[i, j]) for i in range(dim) for j in range(dim)]
+    if all(entry == S.Zero for entry in residual_entries):
         RL += make_tcolorbox(
             'Metric Inverse',
             [r'\textbf{VERIFIED:} $g^{\mu\rho}\,g_{\rho\nu} = \delta^\mu{}_\nu$. $\checkmark$'],
             'boxgreen'
         )
     else:
-        RL.append(r'\textit{Max residual entry: }' + lat(max_res))
+        RL += make_tcolorbox(
+            'Metric Inverse --- WARNING',
+            [r'\textbf{Residual matrix:} $g^{\mu\rho}\,g_{\rho\nu} - \delta^\mu{}_\nu \neq 0$.'],
+            'boxred'
+        )
+        RL.append(r'\begin{equation}')
+        RL.append(r'  \Delta^\mu{}_\nu = ' + matrix_to_latex(id_residual))
+        RL.append(r'\end{equation}')
 
     RL += make_latex_footer()
     return RL

@@ -153,7 +153,15 @@ def evaluate_scalar_grid(fn, coord_vals):
     Array of shape (len(coord_vals[0]), len(coord_vals[1]), ...)
     """
     grids = np.meshgrid(*coord_vals, indexing='ij')
-    return fn(*grids)
+    values = fn(*grids)
+    values = np.asarray(values)
+
+    # Constant expressions may evaluate to a scalar instead of a full grid.
+    # Broadcast them so downstream slicing logic always sees the expected rank.
+    if values.shape != grids[0].shape:
+        values = np.broadcast_to(values, grids[0].shape)
+
+    return values
 
 
 def evaluate_results_numerical(results, coords, coord_ranges, npts=50):
@@ -218,7 +226,14 @@ def plot_gr_quantities(num_results, coords, slice_axes=(0, 1)):
         print("[gr_numerics] matplotlib not available — skipping plots.")
         return
 
+    if len(slice_axes) != 2:
+        raise ValueError("slice_axes must contain exactly two axis indices.")
+
     ax0, ax1 = slice_axes
+    ncoords = len(coords)
+    if not (0 <= ax0 < ncoords and 0 <= ax1 < ncoords):
+        raise ValueError(f"slice_axes={slice_axes} is incompatible with {ncoords} coordinates.")
+
     xlabel = str(coords[ax0])
     ylabel = str(coords[ax1])
 
@@ -228,6 +243,12 @@ def plot_gr_quantities(num_results, coords, slice_axes=(0, 1)):
             data_full = arr.get()        # CuPy
         except AttributeError:
             data_full = np.array(arr)    # JAX or already NumPy
+
+        if data_full.ndim != ncoords:
+            raise ValueError(
+                f"{key} has ndim={data_full.ndim}, but the coordinate list has {ncoords} entries. "
+                "Recompute num_results after updating the numerical grid helper."
+            )
 
         # Take a central slice along all axes that are not ax0 / ax1
         sl = [data_full.shape[i] // 2 for i in range(data_full.ndim)]

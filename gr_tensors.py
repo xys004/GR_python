@@ -479,12 +479,16 @@ def check_bianchi(G_coord, ginv, Gamma, coords, dim=4):
     divergence : list of dim SymPy expressions (each should be 0)
     """
     progress("Verifying Bianchi identity ∇_μ G^{μν} = 0...")
-    # Raise first index: G^{μν} = g^{μρ} G_{ρν}
+    # Raise both indices: G^{μν} = g^{μρ} g^{νσ} G_{ρσ}
     G_up = zeros(dim, dim)
     for mu in range(dim):
         for nu in range(dim):
             G_up[mu, nu] = cancel(
-                sum(ginv[mu, rho] * G_coord[rho, nu] for rho in range(dim))
+                sum(
+                    ginv[mu, rho] * ginv[nu, sigma] * G_coord[rho, sigma]
+                    for rho in range(dim)
+                    for sigma in range(dim)
+                )
             )
 
     raw_divergence = []
@@ -503,12 +507,12 @@ def check_bianchi(G_coord, ginv, Gamma, coords, dim=4):
     # and handles more derivative identities.
     divergence = []
     for v in raw_divergence:
-        if v != S.Zero:
+        if not _is_zero(v):
             progress("  Bianchi: cancel() non-zero, trying simplify() (may be slow)...")
             v = simplify(v)
         divergence.append(v)
 
-    all_zero = all(v == S.Zero for v in divergence)
+    all_zero = all(_is_zero(v) for v in divergence)
     progress(f"  Bianchi check: {'PASSED (all zero)' if all_zero else 'WARNING: non-zero after cancel+simplify'}")
     return divergence
 
@@ -611,12 +615,14 @@ def compute_energy_conditions(G_ortho, dim=4):
     pressures = [cancel(G_ortho[i, i] / (8 * pi)) for i in range(1, dim)]
     NEC = [cancel(rho + p) for p in pressures]
     SEC = cancel(rho + sum(pressures))
+    DEC = [cancel(rho - Abs(p)) for p in pressures]
     return {
         'rho':       rho,
         'pressures': pressures,
         'NEC':       NEC,
         'WEC_rho':   rho,          # WEC requires rho >= 0 separately
         'SEC':       SEC,
+        'DEC':       DEC,
     }
 
 
