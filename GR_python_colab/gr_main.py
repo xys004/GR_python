@@ -79,11 +79,15 @@ dim    = 4                     # spacetime dimension (usually 4)
 #      Define only the extra symbols/functions you need for a custom metric.
 # ------------------------------------------------------------------------------
 M = symbols('M', positive=True)   # reusable parameter for built-in examples
+Q = symbols('Q', real=True)       # charge-like parameter for built-in/custom metrics
+Lambda = symbols('Lambda', real=True)
 
 # Example custom dependencies (uncomment only if your custom metric needs them):
 # alpha_r = Function('alpha')(r)
 # a_t = Function('a', positive=True)(t)
 # H_t = Function('H')(t)
+# Phi_r = Function('Phi')(r)
+# b_r = Function('b')(r)
 
 # ------------------------------------------------------------------------------
 # 1.3  METRIC SELECTION
@@ -93,9 +97,12 @@ AVAILABLE_METRIC_KEYS = list_builtin_metric_keys()
 
 # Built-in options:
 #   schwarzschild
+#   reissner_nordstrom
+#   de_sitter_static
 #   minkowski_spherical
 #   frw_flat
 #   static_spherical
+#   morris_thorne_wormhole
 #   pg_areal
 #   pg_spatial_conformal
 METRIC_KEY = 'pg_spatial_conformal'
@@ -119,7 +126,7 @@ CUSTOM_METRIC_CONFIG = None
 #     'e_tetrad': None,      # optional manual orthonormal tetrad
 # }
 
-PARAMETER_CONTEXT = {'M': M}
+PARAMETER_CONTEXT = {'M': M, 'Q': Q, 'Lambda': Lambda}
 metric_config = select_metric(
     METRIC_KEY,
     coords,

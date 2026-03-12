@@ -45,9 +45,12 @@ It also generates a LaTeX report and, when `pdflatex` is available, a PDF report
 The built-in metric registry currently includes:
 
 - `schwarzschild`
+- `reissner_nordstrom`
+- `de_sitter_static`
 - `minkowski_spherical`
 - `frw_flat`
 - `static_spherical`
+- `morris_thorne_wormhole`
 - `pg_areal`
 - `pg_spatial_conformal`
 
@@ -61,7 +64,7 @@ You no longer need to comment and uncomment large metric blocks.
    ```python
    METRIC_KEY = 'custom'
    ```
-2. Define any extra parameters or SymPy functions your line element needs in Section 1.2.
+2. Define any extra parameters or SymPy functions your line element needs in Section 1.2. Typical examples are `Q`, `Lambda`, `Phi(r)`, `b(r)`, or `a(t)`.
 3. Fill the `CUSTOM_METRIC_CONFIG` template:
    ```python
    CUSTOM_METRIC_CONFIG = {

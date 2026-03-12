@@ -48,7 +48,7 @@ If you want to work with a brand-new metric beyond the predefined warp variants,
 2. define any extra symbols/functions in Section 1.2
 3. fill `CUSTOM_METRIC_CONFIG`
 
-Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/gr_metric_library.py).
+Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/gr_metric_library.py). Useful examples now include Schwarzschild, Reissner-Nordstrom, static de Sitter, and a Morris-Thorne wormhole template.
 
 ## Parallel and GPU Notes
 

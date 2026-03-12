@@ -37,11 +37,17 @@ def build_builtin_metric_library(coords, parameter_context=None):
     t, r, theta, phi = coords
 
     M = parameter_context.get("M", sp.symbols("M", positive=True))
+    Q = parameter_context.get("Q", sp.symbols("Q", real=True))
+    Lambda = parameter_context.get("Lambda", sp.symbols("Lambda", real=True))
     f = 1 - 2 * M / r
+    f_rn = 1 - 2 * M / r + Q**2 / r**2
+    f_ds = 1 - Lambda * r**2 / 3
 
     a_t = Function("a", positive=True)(t)
     A_r = Function("A")(r)
     B_r = Function("B")(r)
+    Phi_r = Function("Phi")(r)
+    b_r = Function("b")(r)
     B_func = Function("B", positive=True)(r)
     beta_func = Function("beta")(r)
 
@@ -57,6 +63,49 @@ def build_builtin_metric_library(coords, parameter_context=None):
             "metric_description": (
                 "Exterior vacuum solution for a spherically symmetric, "
                 "non-rotating mass M"
+            ),
+            "g_inv_metric": None,
+            "e_tetrad": None,
+        },
+        "reissner_nordstrom": {
+            "g_metric": Matrix([
+                [-f_rn, 0, 0, 0],
+                [0, 1 / f_rn, 0, 0],
+                [0, 0, r**2, 0],
+                [0, 0, 0, r**2 * sin(theta)**2],
+            ]),
+            "metric_name": "Reissner-Nordstrom",
+            "metric_description": (
+                "Charged, static, spherically symmetric black-hole metric "
+                "with mass M and charge Q"
+            ),
+            "g_inv_metric": None,
+            "e_tetrad": None,
+        },
+        "de_sitter_static": {
+            "g_metric": Matrix([
+                [-f_ds, 0, 0, 0],
+                [0, 1 / f_ds, 0, 0],
+                [0, 0, r**2, 0],
+                [0, 0, 0, r**2 * sin(theta)**2],
+            ]),
+            "metric_name": "de Sitter (static patch)",
+            "metric_description": (
+                "Static-patch de Sitter spacetime with cosmological constant Lambda"
+            ),
+            "g_inv_metric": None,
+            "e_tetrad": None,
+        },
+        "morris_thorne_wormhole": {
+            "g_metric": Matrix([
+                [-sp.exp(2 * Phi_r), 0, 0, 0],
+                [0, 1 / (1 - b_r / r), 0, 0],
+                [0, 0, r**2, 0],
+                [0, 0, 0, r**2 * sin(theta)**2],
+            ]),
+            "metric_name": "Morris-Thorne wormhole",
+            "metric_description": (
+                "Static traversable wormhole metric with redshift Phi(r) and shape function b(r)"
             ),
             "g_inv_metric": None,
             "e_tetrad": None,
