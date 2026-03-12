@@ -64,7 +64,7 @@ Two commented examples are already included in [gr_main.py](C:/Users/Nelson/Down
 - a diagonal ansatz
 - a metric with a `dt dr` cross-term
 
-Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, and a Morris-Thorne wormhole template.
+Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, a Morris-Thorne wormhole template, and the built-in `warp_doc_*` variants from your document.
 
 ## GPU and Parallel Notes
 

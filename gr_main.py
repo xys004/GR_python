@@ -87,6 +87,9 @@ AVAILABLE_METRIC_KEYS = list_builtin_metric_keys()
 #   morris_thorne_wormhole
 #   pg_areal
 #   pg_spatial_conformal
+#   warp_doc_baseline
+#   warp_doc_variant_a
+#   warp_doc_variant_b
 METRIC_KEY = 'pg_spatial_conformal'
 
 # One-off custom metric:

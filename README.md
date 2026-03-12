@@ -77,8 +77,11 @@ The built-in metric registry currently includes:
 - `morris_thorne_wormhole`
 - `pg_areal`
 - `pg_spatial_conformal`
+- `warp_doc_baseline`
+- `warp_doc_variant_a`
+- `warp_doc_variant_b`
 
-These are defined in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py).
+These are defined in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py). The three `warp_doc_*` options correspond directly to the baseline, Variant A, and Variant B metrics from your warp notes.
 
 ## Add a New Built-in Metric
 

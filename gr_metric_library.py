@@ -20,6 +20,7 @@ the existing entries.
 
 import sympy as sp
 from sympy import Function, Matrix, exp, sin
+from gr_warp import build_metric_configuration
 
 
 def build_builtin_metric_library(coords, parameter_context=None):
@@ -50,6 +51,12 @@ def build_builtin_metric_library(coords, parameter_context=None):
     b_r = Function("b")(r)
     B_func = Function("B", positive=True)(r)
     beta_func = Function("beta")(r)
+    beta_doc = Function("beta")(r)
+    B_doc = Function("B")(r)
+
+    warp_doc_baseline = build_metric_configuration("baseline", coords, beta_doc)
+    warp_doc_variant_a = build_metric_configuration("variant_a", coords, beta_doc, B_doc)
+    warp_doc_variant_b = build_metric_configuration("variant_b", coords, beta_doc, B_doc)
 
     return {
         "schwarzschild": {
@@ -165,6 +172,27 @@ def build_builtin_metric_library(coords, parameter_context=None):
             ),
             "g_inv_metric": None,
             "e_tetrad": None,
+        },
+        "warp_doc_baseline": {
+            "g_metric": warp_doc_baseline["g_metric"],
+            "metric_name": warp_doc_baseline["metric_name"],
+            "metric_description": warp_doc_baseline["description"],
+            "g_inv_metric": None,
+            "e_tetrad": warp_doc_baseline["e_tetrad"],
+        },
+        "warp_doc_variant_a": {
+            "g_metric": warp_doc_variant_a["g_metric"],
+            "metric_name": warp_doc_variant_a["metric_name"],
+            "metric_description": warp_doc_variant_a["description"],
+            "g_inv_metric": None,
+            "e_tetrad": warp_doc_variant_a["e_tetrad"],
+        },
+        "warp_doc_variant_b": {
+            "g_metric": warp_doc_variant_b["g_metric"],
+            "metric_name": warp_doc_variant_b["metric_name"],
+            "metric_description": warp_doc_variant_b["description"],
+            "g_inv_metric": None,
+            "e_tetrad": warp_doc_variant_b["e_tetrad"],
         },
         "pg_spatial_conformal": {
             "g_metric": Matrix([

@@ -80,6 +80,11 @@ Las metricas registradas actualmente en [gr_metric_library.py](C:/Users/Nelson/D
 - `morris_thorne_wormhole`
 - `pg_areal`
 - `pg_spatial_conformal`
+- `warp_doc_baseline`
+- `warp_doc_variant_a`
+- `warp_doc_variant_b`
+
+Las tres opciones `warp_doc_baseline`, `warp_doc_variant_a` y `warp_doc_variant_b` corresponden directamente a las metricas del documento de ustedes.
 
 ## 4. Como agregar una metrica nueva
 
