@@ -1,66 +1,110 @@
 # General Relativity Symbolic Calculator
 
-A highly automated, symbolic General Relativity calculator and report generator powered by SymPy and LaTeX.
+A symbolic General Relativity calculator and report generator powered by SymPy and LaTeX.
 
 ## About
 
-This project is a symbolic calculation engine tailored specifically for researchers, students, and enthusiasts in General Relativity. By leveraging SymPy's symbolic math capabilities, it eliminates the tedious and error-prone process of manually deriving tensor components (like Christoffel symbols and the Riemann tensor) by hand. 
+This project automates the standard symbolic pipeline in General Relativity so you can move directly from a metric ansatz to geometric and physical quantities without hand-deriving the tensor algebra.
 
-Whether you are exploring classic solutions (Schwarzschild, Kerr, FLRW) or testing novel spacetime metrics (e.g., warp drives or wormholes), this calculator provides a robust, automated pipeline to extract the physics directly from the geometry. 
+It computes:
 
-## Overview
+- Christoffel symbols
+- Riemann curvature tensor
+- Ricci tensor and Ricci scalar
+- Einstein tensor
+- Curvature invariants such as Kretschmann and Weyl
+- Orthonormal-frame stress-energy quantities
+- Energy conditions
+- Geodesic equations
+- Killing-coordinate checks
+- Bianchi and trace consistency checks
 
-This tool takes a user-defined spacetime metric (like Schwarzschild, FLRW, or any custom metric) and automatically computes all the essential geometric and physical quantities in General Relativity:
-
-*   **Christoffel Symbols** (Levi-Civita connection)
-*   **Riemann Curvature Tensor**
-*   **Ricci Tensor** & **Ricci Scalar**
-*   **Einstein Tensor**
-*   **Curvature Invariants** (Kretschmann scalar and Weyl conformal tensor)
-*   **Orthonormal Frame Analysis** (Tetrads & Stress-Energy components)
-*   **Energy Conditions** (Null, Weak, Strong, Dominant)
-*   **Geodesic Equations**
-*   **Symmetries** (Killing vector detection for cyclic coordinates)
-*   **Conservation Checks** (Bianchi identity verification)
-
-Finally, it compiles all these results into a beautifully formatted, easily readable **LaTeX PDF report**.
+It also generates a LaTeX report and, when `pdflatex` is available, a PDF report.
 
 ## Requirements
 
-*   **Python 3.x**
-*   **SymPy** (`pip install sympy`)
-*   **LaTeX distribution** with `pdflatex` in your system `PATH` (e.g., MiKTeX on Windows, TeX Live on Linux, MacTeX on macOS).
+- Python 3.x
+- `sympy`
+- a LaTeX distribution with `pdflatex` in PATH
 
-## How to Use
+## Quick Start
 
-1. **Define Your Metric:**
-   Open `gr_main.py` and navigate to **SECTION 1 — USER INPUT**.
-   This is the *only* section you need to modify. You can:
-   *   Define your coordinate symbols (e.g., `t, r, theta, phi`).
-   *   Define parameters (e.g., Mass `M`) or symbolic functions (e.g., scale factor `a(t)`).
-   *   Enter your covariant metric $g_{\mu\nu}$ as a SymPy `Matrix`.
-
-2. **Run the Calculator:**
-   Execute the main script from your terminal:
+1. Open [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+2. In **Section 1**, choose a metric with one line:
+   ```python
+   METRIC_KEY = 'schwarzschild'
+   ```
+3. Run:
    ```bash
    python gr_calculator.py
    ```
-   *(Alternatively, you can run `python gr_main.py` directly).*
+4. Inspect `gr_report.tex` and `gr_report.pdf`.
 
-3. **View the Results:**
-   The script will perform the symbolic math (progress is printed to the console) and then generate `gr_report.tex`. It will automatically attempt to compile it into `gr_report.pdf` using `pdflatex`. Open `gr_report.pdf` to see your full analysis!
+## Built-in Metrics
 
-## Customisation and Computation Flags
+The built-in metric registry currently includes:
 
-Inside `gr_main.py` (Section 1), there are flags to control the computation time, as some tensors (like the Kretschmann scalar or Weyl tensor) can take several minutes to compute for complex symbolic metrics.
+- `schwarzschild`
+- `minkowski_spherical`
+- `frw_flat`
+- `static_spherical`
+- `pg_areal`
+- `pg_spatial_conformal`
 
-*   `FAST_MODE = True`: Skips the heavy Kretschmann and Weyl computations, making the script run much faster. Recommended for your first attempt with a new metric.
-*   `COMPUTE_TETRAD = True`: Automatically computes the orthonormal tetrad via ADM decomposition. You can also provide a custom tetrad manually.
-*   `OUTPUT_FILENAME = "gr_report"`: Change this to name the output LaTeX and PDF files.
+These are defined in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py).
+
+## Adding a One-Off Custom Metric
+
+You no longer need to comment and uncomment large metric blocks.
+
+1. In [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), set:
+   ```python
+   METRIC_KEY = 'custom'
+   ```
+2. Define any extra parameters or SymPy functions your line element needs in Section 1.2.
+3. Fill the `CUSTOM_METRIC_CONFIG` template:
+   ```python
+   CUSTOM_METRIC_CONFIG = {
+       'g_metric': Matrix([...]),
+       'metric_name': 'My Custom Metric',
+       'metric_description': 'Short description',
+       'g_inv_metric': None,
+       'e_tetrad': None,
+   }
+   ```
+4. Leave `g_inv_metric` or `e_tetrad` as `None` unless you want to provide them manually.
+
+## Registering a New Built-in Metric
+
+If you want a metric to become a reusable named option:
+
+1. Open [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py).
+2. Add one more entry inside `build_builtin_metric_library()`.
+3. Reuse the same keys as `CUSTOM_METRIC_CONFIG`:
+   - `g_metric`
+   - `metric_name`
+   - `metric_description`
+   - optional `g_inv_metric`
+   - optional `e_tetrad`
+4. Select it later with:
+   ```python
+   METRIC_KEY = 'your_new_key'
+   ```
+
+## Computation Flags
+
+Inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), you can still control the expensive steps with flags such as:
+
+- `FAST_MODE = True`
+- `COMPUTE_TETRAD = True`
+- `COMPUTE_WEYL = True`
+- `COMPUTE_KRETSCHMANN = True`
+- `OUTPUT_FILENAME = 'gr_report'`
 
 ## Project Structure
 
-*   `gr_calculator.py`: The entry-point script. Run this file.
-*   `gr_main.py`: Contains the **User Input** section, manages the computation pipeline, and calls the PDF compiler.
-*   `gr_tensors.py`: The math engine. Contains all the symbolic tensor calculus functions.
-*   `gr_latex.py`: The formatting engine. Converts SymPy expressions to LaTeX and constructs the final document.
+- [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py): entry point
+- [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py): user configuration and pipeline
+- [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py): built-in metric registry
+- [gr_tensors.py](C:/Users/Nelson/Downloads/GR_python/gr_tensors.py): symbolic tensor engine
+- [gr_latex.py](C:/Users/Nelson/Downloads/GR_python/gr_latex.py): LaTeX/PDF report builder
