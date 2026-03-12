@@ -77,6 +77,11 @@ You no longer need to comment and uncomment large metric blocks.
    ```
 4. Leave `g_inv_metric` or `e_tetrad` as `None` unless you want to provide them manually.
 
+Two ready-to-adapt patterns are now included directly in [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py):
+
+- a diagonal custom metric with a radial function `alpha(r)`
+- a metric with a `dt dr` cross-term controlled by `beta(r)`
+
 ## Registering a New Built-in Metric
 
 If you want a metric to become a reusable named option:

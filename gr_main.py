@@ -107,6 +107,36 @@ CUSTOM_METRIC_CONFIG = None
 #     'g_inv_metric': None,  # optional manual inverse
 #     'e_tetrad': None,      # optional manual orthonormal tetrad
 # }
+#
+# Example A: simple diagonal custom metric
+# alpha_r = Function('alpha')(r)
+# CUSTOM_METRIC_CONFIG = {
+#     'g_metric': Matrix([
+#         [-alpha_r, 0, 0, 0],
+#         [0, 1 / alpha_r, 0, 0],
+#         [0, 0, r**2, 0],
+#         [0, 0, 0, r**2 * sin(theta)**2],
+#     ]),
+#     'metric_name': 'Diagonal toy metric',
+#     'metric_description': 'Example custom diagonal ansatz with alpha(r)',
+#     'g_inv_metric': None,
+#     'e_tetrad': None,
+# }
+#
+# Example B: metric with a dt dr cross-term
+# beta_r = Function('beta')(r)
+# CUSTOM_METRIC_CONFIG = {
+#     'g_metric': Matrix([
+#         [-(1 - beta_r**2), beta_r, 0, 0],
+#         [beta_r, 1, 0, 0],
+#         [0, 0, r**2, 0],
+#         [0, 0, 0, r**2 * sin(theta)**2],
+#     ]),
+#     'metric_name': 'Cross-term toy metric',
+#     'metric_description': 'Example ansatz with a radial dt dr mixing term beta(r)',
+#     'g_inv_metric': None,
+#     'e_tetrad': None,
+# }
 
 PARAMETER_CONTEXT = {'M': M, 'Q': Q, 'Lambda': Lambda}
 metric_config = select_metric(
