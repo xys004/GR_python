@@ -94,6 +94,19 @@ Las metricas registradas actualmente en [gr_metric_library.py](C:/Users/Nelson/D
 
 Las tres opciones `warp_doc_baseline`, `warp_doc_variant_a` y `warp_doc_variant_b` corresponden directamente a las metricas del documento de ustedes.
 
+
+## Citacion y Zenodo
+
+El repo ahora incluye:
+
+- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
+- [.zenodo.json](C:/Users/Nelson/Downloads/GR_python/.zenodo.json)
+
+Estos archivos dejan preparado el proyecto para archivarlo desde GitHub hacia Zenodo.
+La metadata actual usa a Nelson Bolivar como autor/creator y Astrum Drive Technologies como afiliacion.
+
+La asistencia de IA queda mencionada como nota de desarrollo, no como autor formal del software.
+
 ## 4. Como agregar una metrica nueva
 
 ### Opcion A: metrica custom para una sola corrida

@@ -118,6 +118,19 @@ Inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), the most us
 - `COMPUTE_KRETSCHMANN = True`
 - `OUTPUT_FILENAME = 'gr_report'`
 
+
+## Citation and Zenodo
+
+The repository now includes:
+
+- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
+- [.zenodo.json](C:/Users/Nelson/Downloads/GR_python/.zenodo.json)
+
+These files prepare the project for GitHub release archiving in Zenodo.
+Current creator metadata is set to Nelson Bolivar, affiliated with Astrum Drive Technologies.
+
+Note: AI assistance is mentioned in metadata notes and documentation, but not listed as a formal software author.
+
 ## Project Structure
 
 - [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py): entry point

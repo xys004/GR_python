@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "GR_python: Symbolic General Relativity Calculator and Report Generator"
+abstract: >-
+  Symbolic General Relativity calculator and report generator powered by SymPy
+  and LaTeX. The project supports local script-based workflows and a Colab
+  notebook workflow for computing curvature tensors, invariants, orthonormal-frame
+  quantities, energy conditions, geodesics, and report outputs from user-defined metrics.
+type: software
+authors:
+  - family-names: "Bolivar"
+    given-names: "Nelson"
+    affiliation: "Astrum Drive Technologies"
+repository-code: "https://github.com/xys004/GR_python"
+url: "https://github.com/xys004/GR_python"
+keywords:
+  - general relativity
+  - symbolic computation
+  - sympy
+  - tensor calculus
+  - spacetime metrics
+  - warp metrics
