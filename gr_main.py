@@ -181,6 +181,9 @@ COMPUTE_KILLING     = True   # Detect cyclic coordinates / Killing vectors
 COMPUTE_TETRAD      = True   # Auto-compute orthonormal tetrad via ADM decomposition.
                               # Set this flag to True if you want the code to build the tetrad automatically.
                               # Do NOT set e_tetrad = True; e_tetrad must be a Matrix or None.
+                              # Gauge convention: diagonal metrics use the canonical
+                              # coordinate-aligned static tetrad; metrics with shift
+                              # terms use the ADM/Eulerian tetrad of the chosen slicing.
                               # Set False to skip Sections 8 & 9 entirely (old behaviour).
                               # A user-supplied e_tetrad above always takes priority.
 FAST_MODE           = False  # True = skip Weyl and Kretschmann (recommended for first runs)

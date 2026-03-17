@@ -634,6 +634,10 @@ def _is_zero(expr):
         return False
 
 
+# Automatic tetrad convention:
+#   - diagonal metrics -> canonical coordinate-aligned static tetrad
+#   - metrics with g_{0i} -> ADM/Eulerian tetrad adapted to the t = const slicing
+#   - non-diagonal spatial blocks -> spatial triad fixed by Cholesky
 def compute_tetrad_adm(g, ginv, coords, dim=4):
     """
     Automatically construct an orthonormal tetrad e^μ_a from the metric g.
@@ -680,6 +684,8 @@ def compute_tetrad_adm(g, ginv, coords, dim=4):
     # Case A: Fully diagonal metric
     # ------------------------------------------------------------------
     if fully_diagonal:
+        # Canonical diagonal frame aligned with the coordinate basis.
+        # For Schwarzschild coordinates this is the standard static frame.
         entries_contra = []
         entries_cov    = []
         E_diag         = []
@@ -736,6 +742,9 @@ def compute_tetrad_adm(g, ginv, coords, dim=4):
     # Case B: diagonal spatial block
     # ------------------------------------------------------------------
     if spatial_diagonal:
+        # ADM/Eulerian frame with lapse N, shift beta^i, and a diagonal
+        # spatial triad. This is the natural orthonormal frame associated
+        # with the chosen foliation, not an arbitrary boosted tetrad.
         E_diag = [sqrt(cancel(gamma[i, i])) for i in range(n - 1)]
         E = Matrix(n - 1, n - 1, lambda i, j: E_diag[i] if i == j else S.Zero)
 

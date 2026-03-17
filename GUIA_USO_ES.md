@@ -49,6 +49,13 @@ Ejemplos ya incluidos en [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_mai
 - una metrica diagonal con `alpha(r)`
 - una metrica con termino cruzado `dt dr` usando `beta(r)`
 
+### Nota sobre la tetrada automatica
+
+- `COMPUTE_TETRAD = True` activa la tetrada ortonormal automatica
+- en metricas diagonales, el codigo usa la tetrada estatica canonica alineada con las coordenadas
+- en metricas con terminos `g_{0i}`, usa la tetrada ADM/Euleriana adaptada al foliado `t = const`
+- si queres otra tetrada equivalente, tenes que suministrarla manualmente con `e_tetrad = Matrix(...)`
+
 ## 2. Uso en Colab paso a paso
 
 1. Abri [GR_python_colab/GR_Colab.ipynb](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/GR_Colab.ipynb) en Google Colab.

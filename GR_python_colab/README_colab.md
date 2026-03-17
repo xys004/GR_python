@@ -44,6 +44,13 @@ If you are local or in Google Cloud, start from `gr_main.py` / `gr_calculator.py
 - **Cell 4** runs the symbolic GR computation
 - **Cell 5** writes `gr_report.pdf` and, if enabled, `gr_comparison_report.pdf`
 
+## Automatic Tetrad Convention
+
+- `COMPUTE_TETRAD = True` enables the automatic orthonormal frame
+- for diagonal metrics, the code uses the canonical coordinate-aligned static tetrad
+- for metrics with `g_{0i}` shift terms, it uses the ADM/Eulerian tetrad adapted to the `t = const` slicing
+- if you want a different but equivalent tetrad, supply it manually with `e_tetrad = Matrix(...)`
+
 ## Standard Warp-Document Workflow
 
 In **Cell 3**, the usual configuration is:

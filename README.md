@@ -114,6 +114,7 @@ Inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), the most us
 
 - `FAST_MODE = True` to skip heavy invariant computations
 - `COMPUTE_TETRAD = True` to keep orthonormal-frame analysis enabled
+- automatic tetrad gauge: diagonal metrics use the canonical coordinate-aligned static tetrad; metrics with `g_{0i}` shift terms use the ADM/Eulerian tetrad adapted to the `t = const` slicing
 - `COMPUTE_WEYL = True`
 - `COMPUTE_KRETSCHMANN = True`
 - `OUTPUT_FILENAME = 'gr_report'`
