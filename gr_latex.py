@@ -993,8 +993,38 @@ def assemble_report(results, coords, dim, metric_name, description,
                 r'A \textbf{user-supplied} tetrad was provided in Section~1. '
                 r'The code verified orthonormality and projected the Einstein tensor.',
         }
+        _method_title = {
+            'diagonal': r'Automatic tetrad: diagonal static frame',
+            'adm_shift_diagonal_spatial': r'Automatic tetrad: ADM/Eulerian frame (diagonal spatial block)',
+            'adm_shift_cholesky': r'Automatic tetrad: ADM/Eulerian frame with Cholesky-fixed spatial triad',
+            'user_supplied': r'User-supplied tetrad',
+        }
+        _gauge_note = {
+            'diagonal':
+                r'This automatic choice corresponds to the canonical coordinate-aligned '
+                r'\textbf{static orthonormal frame}. For Schwarzschild in standard '
+                r'coordinates, this is the usual static tetrad.',
+            'adm_shift_diagonal_spatial':
+                r'This automatic choice corresponds to the \textbf{ADM/Eulerian frame} '
+                r'adapted to the $t = \mathrm{const}$ slicing. The code does not scan all '
+                r'local Lorentz-related tetrads; it fixes the natural frame of the chosen foliation.',
+            'adm_shift_cholesky':
+                r'This automatic choice corresponds to the \textbf{ADM/Eulerian frame} '
+                r'adapted to the $t = \mathrm{const}$ slicing, with the spatial triad '
+                r'fixed by Cholesky factorisation of $\gamma_{ij}$. This selects one definite '
+                r'spatial gauge among many equivalent orthonormal choices.',
+            'user_supplied':
+                r'The automatic gauge convention is not used here because the frame was '
+                r'provided manually by the user.',
+        }
+        RL.append(r'\textbf{Method used:} ' + _method_title.get(
+            _method, r'Tetrad method \texttt{' + _method.replace('_', r'\_') + r'}'))
         RL.append(_method_desc.get(_method,
             r'Tetrad constructed by method: \texttt{' + _method.replace('_', r'\_') + r'}.'))
+        RL.append(r'\textbf{Gauge/frame convention:} ' + _gauge_note.get(
+            _method,
+            r'The code used the stored tetrad method without additional gauge metadata.'
+        ))
 
         # ------------------------------------------------------------------
         # 8.2 — ADM Lapse and Shift  (only for ADM methods)
