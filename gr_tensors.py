@@ -589,42 +589,64 @@ def find_killing_coordinates(g_metric, coords, dim=4):
 
 def compute_energy_conditions(G_ortho, dim=4):
     """
-    Extract stress-energy components and evaluate energy conditions
+    Extract stress-energy components and symbolic energy-condition diagnostics
     from the orthonormal-frame Einstein tensor.
 
-    From G_{μν} = 8π T_{μν} in the orthonormal frame:
-      ρ   = Ĝ_{00} / 8π      (energy density)
-      p_i = Ĝ_{ii} / 8π      (principal pressures, i = 1, 2, ..., dim−1)
+    From G_{ab} = 8*pi T_{ab} in the orthonormal frame:
+      rho = Ghat_{00} / 8*pi
+      p_i = Ghat_{ii} / 8*pi      (principal pressures)
+      q_i = Ghat_{0i} / 8*pi      (energy-flux / momentum-density components)
 
-    Energy conditions (expressed symbolically — sign requires parameter info):
-      NEC (Null):     ρ + p_i ≥ 0   for each i
-      WEC (Weak):     ρ ≥ 0  and  NEC
-      SEC (Strong):   ρ + Σ_i p_i ≥ 0
-      DEC (Dominant): ρ ≥ |p_i|   for each i
+    Important scope note
+    --------------------
+    The simple textbook expressions NEC = rho + p_i and DEC = rho - |p_i|
+    are exact only when the orthonormal stress tensor is diagonal in the
+    corresponding (0,i) block. When q_i != 0, the relevant null contractions
+    are rho + p_i +/- 2 q_i, and the strongest directional null margin is
+    rho + p_i - 2|q_i|.
 
     Parameters
     ----------
-    G_ortho : sympy.Matrix  — orthonormal frame Einstein tensor Ĝ_{ab}
+    G_ortho : sympy.Matrix  - orthonormal-frame Einstein tensor
     dim     : int
 
     Returns
     -------
-    dict with keys: 'rho', 'pressures', 'NEC', 'WEC_rho', 'SEC', 'DEC'
+    dict with keys:
+        rho, pressures, fluxes,
+        NEC, NEC_plus, NEC_minus, NEC_flux_margin,
+        WEC_rho, SEC,
+        DEC_pressures, DEC_flux,
+        has_flux
     """
     rho = cancel(G_ortho[0, 0] / (8 * pi))
     pressures = [cancel(G_ortho[i, i] / (8 * pi)) for i in range(1, dim)]
-    NEC = [cancel(rho + p) for p in pressures]
-    SEC = cancel(rho + sum(pressures))
-    DEC = [cancel(rho - Abs(p)) for p in pressures]
-    return {
-        'rho':       rho,
-        'pressures': pressures,
-        'NEC':       NEC,
-        'WEC_rho':   rho,          # WEC requires rho >= 0 separately
-        'SEC':       SEC,
-        'DEC':       DEC,
-    }
+    fluxes = [cancel(G_ortho[0, i] / (8 * pi)) for i in range(1, dim)]
 
+    NEC = [cancel(rho + p) for p in pressures]
+    NEC_plus = [cancel(rho + p + 2 * q) for p, q in zip(pressures, fluxes)]
+    NEC_minus = [cancel(rho + p - 2 * q) for p, q in zip(pressures, fluxes)]
+    NEC_flux_margin = [cancel(rho + p - 2 * Abs(q)) for p, q in zip(pressures, fluxes)]
+
+    SEC = cancel(rho + sum(pressures))
+    DEC_pressures = [cancel(rho - Abs(p)) for p in pressures]
+    DEC_flux = [cancel(rho - Abs(q)) for q in fluxes]
+    has_flux = any(not _is_zero(q) for q in fluxes)
+
+    return {
+        'rho': rho,
+        'pressures': pressures,
+        'fluxes': fluxes,
+        'NEC': NEC,
+        'NEC_plus': NEC_plus,
+        'NEC_minus': NEC_minus,
+        'NEC_flux_margin': NEC_flux_margin,
+        'WEC_rho': rho,
+        'SEC': SEC,
+        'DEC_pressures': DEC_pressures,
+        'DEC_flux': DEC_flux,
+        'has_flux': has_flux,
+    }
 
 def _is_zero(expr):
     """Return True if cancel(expr) == 0 (robust to unsimplified symbolic zeros)."""

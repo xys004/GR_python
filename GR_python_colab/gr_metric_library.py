@@ -204,7 +204,7 @@ def build_builtin_metric_library(coords, parameter_context=None):
             "metric_name": "PG-type warp metric (Spatial Conformal)",
             "metric_description": (
                 "Painleve-Gullstrand-type metric with lapse N=1, radial shift "
-                "beta(r), and areal radius"
+                "beta(r), and a conformal factor on the full spatial sector"
             ),
             "g_inv_metric": None,
             "e_tetrad": None,

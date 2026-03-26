@@ -179,8 +179,8 @@ def evaluate_results_numerical(results, coords, coord_ranges, npts=50, parameter
     Returns
     -------
     num_results : dict  {key: array}
-        Keys produced: 'R_scalar', 'K' (Kretschmann), plus any other scalar
-        entries in *results* that are non-None SymPy expressions.
+        Keys currently produced: 'R_scalar' and 'K' (Kretschmann) when they
+        are present and can be evaluated on the chosen grid.
     """
     backend = detect_backend()
     xp      = get_backend(backend)

@@ -1166,35 +1166,56 @@ def assemble_report(results, coords, dim, metric_name, description,
         ec_lines += split_long_equation(r'\rho', lat(ec['rho']), inside_tcolorbox=True)
         for i, p in enumerate(ec['pressures']):
             ec_lines += split_long_equation(f'p_{i+1}', lat(p), inside_tcolorbox=True)
+        for i, q in enumerate(ec.get('fluxes', [])):
+            if ec.get('has_flux'):
+                ec_lines += split_long_equation(f'q_{i+1}', lat(q), inside_tcolorbox=True)
         RL += make_tcolorbox('Physical stress-energy', ec_lines, 'boxblue')
 
         RL.append(r'\subsection{Null Energy Condition (NEC)}')
-        RL.append(
-            r'NEC requires $\rho + p_i \geq 0$ for all principal pressures $p_i$. '
-            r'Violation implies exotic (negative-energy) matter.'
-        )
+        if ec.get('has_flux'):
+            RL.append(
+                r'The orthonormal stress tensor has non-zero flux terms $q_i = T_{\hat{0}\hat{i}}$. '
+                r'In that case the simple diagonal formula $\rho + p_i \geq 0$ is not the full story. '
+                r'The directional null contractions are $\rho + p_i \pm 2 q_i$, and the strongest '
+                r'flux-aware null margin is $\rho + p_i - 2|q_i|$.'
+            )
+        else:
+            RL.append(
+                r'NEC requires $\rho + p_i \geq 0$ for all principal pressures $p_i$. '
+                r'Violation implies exotic (negative-energy) matter.'
+            )
         for i, nec_expr in enumerate(ec['NEC']):
             RL += split_long_equation(rf'\rho + p_{i+1}', lat(nec_expr))
+        if ec.get('has_flux'):
+            for i, expr in enumerate(ec.get('NEC_plus', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} + 2 q_{i+1}', lat(expr))
+            for i, expr in enumerate(ec.get('NEC_minus', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} - 2 q_{i+1}', lat(expr))
+            for i, expr in enumerate(ec.get('NEC_flux_margin', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} - 2 |q_{i+1}|', lat(expr))
 
         RL.append(r'\subsection{Weak Energy Condition (WEC)}')
-        RL.append(r'WEC: $\rho \geq 0$ (energy density non-negative) and NEC.')
+        RL.append(r'WEC requires $\rho \geq 0$ together with the relevant null inequalities.')
         RL += split_long_equation(r'\rho', lat(ec['WEC_rho']))
 
         RL.append(r'\subsection{Strong Energy Condition (SEC)}')
-        RL.append(r'SEC: $\rho + \sum_i p_i \geq 0$.')
+        RL.append(r'SEC diagnostic: $\rho + \sum_i p_i \geq 0$.')
         RL += split_long_equation(r'\rho + \textstyle\sum_i p_i', lat(ec['SEC']))
 
         RL.append(r'\subsection{Dominant Energy Condition (DEC)}')
         RL.append(
-            r'DEC: $\rho \geq |p_i|$ — energy flows causally, '
-            r'no superluminal energy transport.'
+            r'A useful symbolic DEC diagnostic is $\rho \geq |p_i|$. '
+            r'When flux terms are present, also inspect the flux magnitude and the '
+            r'flux-aware null margins above before drawing a physical conclusion.'
         )
         RL.append(
-            r'\textit{(The DEC requires knowledge of the sign of $\rho$ relative '
-            r'to $|p_i|$; substitute explicit parameter values to evaluate.)}'
+            r'\textit{(For symbolic runs, substitute explicit parameter values to determine signs.)}'
         )
-        for i, dec_expr in enumerate(ec.get('DEC', [])):
+        for i, dec_expr in enumerate(ec.get('DEC_pressures', [])):
             RL += split_long_equation(rf'\rho - |p_{i+1}|', lat(dec_expr))
+        if ec.get('has_flux'):
+            for i, expr in enumerate(ec.get('DEC_flux', [])):
+                RL += split_long_equation(rf'\rho - |q_{i+1}|', lat(expr))
     else:
         RL.append(
             r'\textit{Energy conditions require an orthonormal tetrad. '
