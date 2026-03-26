@@ -30,11 +30,11 @@ If you are local or in Google Cloud, start from `gr_main.py` / `gr_calculator.py
 
 1. Open `GR_Colab.ipynb` in Google Colab.
 2. Run **Cell 1** to install LaTeX and Python dependencies.
-3. Run **Cell 2** to clone the GitHub branch and import the modules.
+3. Run **Cell 2** to clone the GitHub repo and import the modules.
 4. Edit **Cell 3**.
 5. Run **Cell 4** for the symbolic calculation.
 6. Run **Cell 5** to generate the report files.
-7. If you want numerics and plots, continue with **Cell 6**, **Cell 7**, and **Cell 8**.
+7. If you want numerics and plots, continue with **Cell 6** and **Cell 7**. **Cell 8** is an advanced geodesic template and needs a real RHS before it becomes a physical trajectory.
 
 ## What Each Important Cell Does
 
