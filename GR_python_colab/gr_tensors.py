@@ -479,12 +479,16 @@ def check_bianchi(G_coord, ginv, Gamma, coords, dim=4):
     divergence : list of dim SymPy expressions (each should be 0)
     """
     progress("Verifying Bianchi identity ∇_μ G^{μν} = 0...")
-    # Raise first index: G^{μν} = g^{μρ} G_{ρν}
+    # Raise both indices: G^{μν} = g^{μρ} g^{νσ} G_{ρσ}
     G_up = zeros(dim, dim)
     for mu in range(dim):
         for nu in range(dim):
             G_up[mu, nu] = cancel(
-                sum(ginv[mu, rho] * G_coord[rho, nu] for rho in range(dim))
+                sum(
+                    ginv[mu, rho] * ginv[nu, sigma] * G_coord[rho, sigma]
+                    for rho in range(dim)
+                    for sigma in range(dim)
+                )
             )
 
     raw_divergence = []
@@ -503,12 +507,12 @@ def check_bianchi(G_coord, ginv, Gamma, coords, dim=4):
     # and handles more derivative identities.
     divergence = []
     for v in raw_divergence:
-        if v != S.Zero:
+        if not _is_zero(v):
             progress("  Bianchi: cancel() non-zero, trying simplify() (may be slow)...")
             v = simplify(v)
         divergence.append(v)
 
-    all_zero = all(v == S.Zero for v in divergence)
+    all_zero = all(_is_zero(v) for v in divergence)
     progress(f"  Bianchi check: {'PASSED (all zero)' if all_zero else 'WARNING: non-zero after cancel+simplify'}")
     return divergence
 
@@ -585,40 +589,64 @@ def find_killing_coordinates(g_metric, coords, dim=4):
 
 def compute_energy_conditions(G_ortho, dim=4):
     """
-    Extract stress-energy components and evaluate energy conditions
+    Extract stress-energy components and symbolic energy-condition diagnostics
     from the orthonormal-frame Einstein tensor.
 
-    From G_{μν} = 8π T_{μν} in the orthonormal frame:
-      ρ   = Ĝ_{00} / 8π      (energy density)
-      p_i = Ĝ_{ii} / 8π      (principal pressures, i = 1, 2, ..., dim−1)
+    From G_{ab} = 8*pi T_{ab} in the orthonormal frame:
+      rho = Ghat_{00} / 8*pi
+      p_i = Ghat_{ii} / 8*pi      (principal pressures)
+      q_i = Ghat_{0i} / 8*pi      (energy-flux / momentum-density components)
 
-    Energy conditions (expressed symbolically — sign requires parameter info):
-      NEC (Null):     ρ + p_i ≥ 0   for each i
-      WEC (Weak):     ρ ≥ 0  and  NEC
-      SEC (Strong):   ρ + Σ_i p_i ≥ 0
-      DEC (Dominant): ρ ≥ |p_i|   for each i
+    Important scope note
+    --------------------
+    The simple textbook expressions NEC = rho + p_i and DEC = rho - |p_i|
+    are exact only when the orthonormal stress tensor is diagonal in the
+    corresponding (0,i) block. When q_i != 0, the relevant null contractions
+    are rho + p_i +/- 2 q_i, and the strongest directional null margin is
+    rho + p_i - 2|q_i|.
 
     Parameters
     ----------
-    G_ortho : sympy.Matrix  — orthonormal frame Einstein tensor Ĝ_{ab}
+    G_ortho : sympy.Matrix  - orthonormal-frame Einstein tensor
     dim     : int
 
     Returns
     -------
-    dict with keys: 'rho', 'pressures', 'NEC', 'WEC_rho', 'SEC', 'DEC'
+    dict with keys:
+        rho, pressures, fluxes,
+        NEC, NEC_plus, NEC_minus, NEC_flux_margin,
+        WEC_rho, SEC,
+        DEC_pressures, DEC_flux,
+        has_flux
     """
     rho = cancel(G_ortho[0, 0] / (8 * pi))
     pressures = [cancel(G_ortho[i, i] / (8 * pi)) for i in range(1, dim)]
-    NEC = [cancel(rho + p) for p in pressures]
-    SEC = cancel(rho + sum(pressures))
-    return {
-        'rho':       rho,
-        'pressures': pressures,
-        'NEC':       NEC,
-        'WEC_rho':   rho,          # WEC requires rho >= 0 separately
-        'SEC':       SEC,
-    }
+    fluxes = [cancel(G_ortho[0, i] / (8 * pi)) for i in range(1, dim)]
 
+    NEC = [cancel(rho + p) for p in pressures]
+    NEC_plus = [cancel(rho + p + 2 * q) for p, q in zip(pressures, fluxes)]
+    NEC_minus = [cancel(rho + p - 2 * q) for p, q in zip(pressures, fluxes)]
+    NEC_flux_margin = [cancel(rho + p - 2 * Abs(q)) for p, q in zip(pressures, fluxes)]
+
+    SEC = cancel(rho + sum(pressures))
+    DEC_pressures = [cancel(rho - Abs(p)) for p in pressures]
+    DEC_flux = [cancel(rho - Abs(q)) for q in fluxes]
+    has_flux = any(not _is_zero(q) for q in fluxes)
+
+    return {
+        'rho': rho,
+        'pressures': pressures,
+        'fluxes': fluxes,
+        'NEC': NEC,
+        'NEC_plus': NEC_plus,
+        'NEC_minus': NEC_minus,
+        'NEC_flux_margin': NEC_flux_margin,
+        'WEC_rho': rho,
+        'SEC': SEC,
+        'DEC_pressures': DEC_pressures,
+        'DEC_flux': DEC_flux,
+        'has_flux': has_flux,
+    }
 
 def _is_zero(expr):
     """Return True if cancel(expr) == 0 (robust to unsimplified symbolic zeros)."""
@@ -628,6 +656,10 @@ def _is_zero(expr):
         return False
 
 
+# Automatic tetrad convention:
+#   - diagonal metrics -> canonical coordinate-aligned static tetrad
+#   - metrics with g_{0i} -> ADM/Eulerian tetrad adapted to the t = const slicing
+#   - non-diagonal spatial blocks -> spatial triad fixed by Cholesky
 def compute_tetrad_adm(g, ginv, coords, dim=4):
     """
     Automatically construct an orthonormal tetrad e^μ_a from the metric g.
@@ -674,6 +706,8 @@ def compute_tetrad_adm(g, ginv, coords, dim=4):
     # Case A: Fully diagonal metric
     # ------------------------------------------------------------------
     if fully_diagonal:
+        # Canonical diagonal frame aligned with the coordinate basis.
+        # For Schwarzschild coordinates this is the standard static frame.
         entries_contra = []
         entries_cov    = []
         E_diag         = []
@@ -730,6 +764,9 @@ def compute_tetrad_adm(g, ginv, coords, dim=4):
     # Case B: diagonal spatial block
     # ------------------------------------------------------------------
     if spatial_diagonal:
+        # ADM/Eulerian frame with lapse N, shift beta^i, and a diagonal
+        # spatial triad. This is the natural orthonormal frame associated
+        # with the chosen foliation, not an arbitrary boosted tetrad.
         E_diag = [sqrt(cancel(gamma[i, i])) for i in range(n - 1)]
         E = Matrix(n - 1, n - 1, lambda i, j: E_diag[i] if i == j else S.Zero)
 
@@ -798,6 +835,16 @@ def verify_tetrad(e_contra, g, dim=4):
     passed   : bool    — True if result == η up to cancel()
     residual : Matrix  — result − η  (all zeros if passed)
     """
+    if isinstance(e_contra, bool):
+        raise TypeError(
+            "e_contra must be a SymPy Matrix, not a boolean. "
+            "Did you mean to set COMPUTE_TETRAD = True instead of e_tetrad = True?"
+        )
+    if isinstance(g, bool):
+        raise TypeError(
+            "g must be a metric Matrix, not a boolean. "
+            "Check the arguments passed to verify_tetrad() or run_computations()."
+        )
     n = dim
     eta = Matrix(n, n, lambda i, j: (-1 if i == 0 else 1) if i == j else 0)
     result = zeros(n, n)

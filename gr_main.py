@@ -22,6 +22,7 @@ from gr_tensors import (
     progress,                   # defined in gr_tensors (lowest-level module)
 )
 from gr_latex import assemble_report
+from gr_metric_library import list_builtin_metric_keys, select_metric
 
 # ==============================================================================
 # SECTION 0 — IMPORTS
@@ -57,137 +58,112 @@ dim    = 4                     # spacetime dimension (usually 4)
 
 # ------------------------------------------------------------------------------
 # 1.2  METRIC PARAMETERS AND SYMBOLIC FUNCTIONS
-#      Define any symbols / SymPy Functions that appear in your metric.
+#      Define only the extra symbols/functions you need for a custom metric.
 # ------------------------------------------------------------------------------
-M = symbols('M', positive=True)   # mass (Schwarzschild, Kerr, ...)
-# a = symbols('a', positive=True) # spin parameter (Kerr)
-# Lambda = symbols('Lambda')       # cosmological constant
+M = symbols('M', positive=True)   # reusable parameter for built-in examples
+Q = symbols('Q', real=True)       # charge-like parameter for built-in/custom metrics
+Lambda = symbols('Lambda', real=True)
 
-# Example: scale factor for FRW (uncomment when using FRW metric below)
+# Example custom dependencies (uncomment only if your custom metric needs them):
+# alpha_r = Function('alpha')(r)
 # a_t = Function('a', positive=True)(t)
-
-# General radial functions for arbitrary spherical static metrics (uncomment if needed)
-# A_r = Function('A')(r)
-# B_r = Function('B')(r)
+# H_t = Function('H')(t)
+# Phi_r = Function('Phi')(r)
+# b_r = Function('b')(r)
 
 # ------------------------------------------------------------------------------
-# 1.3  METRIC TENSOR  g_{μν}  (covariant, i.e. with lowered indices)
+# 1.3  METRIC SELECTION
+#      Pick a built-in metric key, or use METRIC_KEY = 'custom'.
+# ------------------------------------------------------------------------------
+AVAILABLE_METRIC_KEYS = list_builtin_metric_keys()
+
+# Built-in options:
+#   schwarzschild
+#   reissner_nordstrom
+#   de_sitter_static
+#   minkowski_spherical
+#   frw_flat
+#   static_spherical
+#   morris_thorne_wormhole
+#   pg_areal
+#   pg_spatial_conformal
+#   warp_doc_baseline
+#   warp_doc_variant_a
+#   warp_doc_variant_b
+# Recommended first run: start with 'schwarzschild' to verify your environment.
+METRIC_KEY = 'schwarzschild'
+
+# One-off custom metric:
+# 1. Set METRIC_KEY = 'custom'
+# 2. Define any extra symbols/functions above
+# 3. Fill CUSTOM_METRIC_CONFIG below
+CUSTOM_METRIC_CONFIG = None
+
+# CUSTOM_METRIC_CONFIG = {
+#     'g_metric': Matrix([
+#         [...],  # row for t
+#         [...],  # row for r
+#         [...],  # row for theta
+#         [...],  # row for phi
+#     ]),
+#     'metric_name': 'My Custom Metric',
+#     'metric_description': 'Short description of the line element',
+#     'g_inv_metric': None,  # optional manual inverse
+#     'e_tetrad': None,      # optional manual orthonormal tetrad
+# }
 #
-#      Specify as a dim × dim SymPy Matrix.
-#      Rows and columns are indexed in the order of `coords`.
+# Example A: simple diagonal custom metric
+# alpha_r = Function('alpha')(r)
+# CUSTOM_METRIC_CONFIG = {
+#     'g_metric': Matrix([
+#         [-alpha_r, 0, 0, 0],
+#         [0, 1 / alpha_r, 0, 0],
+#         [0, 0, r**2, 0],
+#         [0, 0, 0, r**2 * sin(theta)**2],
+#     ]),
+#     'metric_name': 'Diagonal toy metric',
+#     'metric_description': 'Example custom diagonal ansatz with alpha(r)',
+#     'g_inv_metric': None,
+#     'e_tetrad': None,
+# }
 #
-#      ACTIVE METRIC: Schwarzschild exterior vacuum solution
-#      To use a different metric: comment out this block and uncomment another.
-# ------------------------------------------------------------------------------
+# Example B: metric with a dt dr cross-term
+# beta_r = Function('beta')(r)
+# CUSTOM_METRIC_CONFIG = {
+#     'g_metric': Matrix([
+#         [-(1 - beta_r**2), beta_r, 0, 0],
+#         [beta_r, 1, 0, 0],
+#         [0, 0, r**2, 0],
+#         [0, 0, 0, r**2 * sin(theta)**2],
+#     ]),
+#     'metric_name': 'Cross-term toy metric',
+#     'metric_description': 'Example ansatz with a radial dt dr mixing term beta(r)',
+#     'g_inv_metric': None,
+#     'e_tetrad': None,
+# }
 
-# --- SCHWARZSCHILD (active) ---------------------------------------------------
-#f = 1 - 2*M/r
-#g_metric = Matrix([
-#    [-f,      0,        0,              0               ],
-#    [ 0,    1/f,        0,              0               ],
-#    [ 0,      0,      r**2,             0               ],
-#    [ 0,      0,        0,    r**2 * sin(theta)**2      ]
-#])
-#METRIC_NAME        = "Schwarzschild"
-#METRIC_DESCRIPTION = "Exterior vacuum solution for a spherically symmetric, non-rotating mass M"
+PARAMETER_CONTEXT = {'M': M, 'Q': Q, 'Lambda': Lambda}
+metric_config = select_metric(
+    METRIC_KEY,
+    coords,
+    parameter_context=PARAMETER_CONTEXT,
+    custom_metric_config=CUSTOM_METRIC_CONFIG,
+)
 
-# --- FLAT MINKOWSKI in spherical coordinates (good for testing: all R=0) ----
-# g_metric = Matrix([
-#     [-1,  0,     0,              0               ],
-#     [ 0,  1,     0,              0               ],
-#     [ 0,  0,   r**2,             0               ],
-#     [ 0,  0,     0,   r**2 * sin(theta)**2       ]
-# ])
-# METRIC_NAME        = "Minkowski (spherical)"
-# METRIC_DESCRIPTION = "Flat Minkowski spacetime in spherical coordinates"
-
-# --- FRW (flat spatial sections, homogeneous isotropic cosmology) ------------
-# a_t = Function('a', positive=True)(t)
-# g_metric = Matrix([
-#     [-1,         0,            0,                     0              ],
-#     [ 0,  a_t**2,              0,                     0              ],
-#     [ 0,       0,    a_t**2*r**2,                     0              ],
-#     [ 0,       0,              0,   a_t**2*r**2*sin(theta)**2        ]
-# ])
-# METRIC_NAME        = "FRW (flat)"
-# METRIC_DESCRIPTION = "Flat FLRW cosmological metric with scale factor a(t)"
-
-# --- GENERAL STATIC SPHERICALLY SYMMETRIC ------------------------------------
-# A_r = Function('A')(r)
-# B_r = Function('B')(r)
-# g_metric = Matrix([
-#     [-exp(2*A_r),          0,       0,                 0              ],
-#     [          0, exp(2*B_r),       0,                 0              ],
-#     [          0,          0,   r**2,                 0              ],
-#     [          0,          0,       0,  r**2*sin(theta)**2            ]
-# ])
-# METRIC_NAME        = "General static spherical"
-# METRIC_DESCRIPTION = "Static spherically symmetric metric with arbitrary radial functions A(r), B(r)"
-
-# --- PG-TYPE WARP METRIC (Painleve-Gullstrand / shift-vector type) ----------
-#B_func  = Function('B',  positive=True)(r)
-#beta_func = Function('beta')(r)
-#g_metric = Matrix([
-#     [-(1 - B_func**2 * beta_func**2),  B_func**2 * beta_func, 0, 0],
-#     [ B_func**2 * beta_func,           B_func**2,             0, 0],
-#     [ 0, 0, r**2,  0],
-#     [ 0, 0, 0,     r**2 * sin(theta)**2]
-# ])
-#METRIC_NAME        = "PG-type warp metric (areal gauge)"
-#METRIC_DESCRIPTION = "Painleve-Gullstrand-type metric with lapse N=1, radial shift beta(r), and areal radius"
-
-# --- PG-TYPE WARP METRIC (Painleve-Gullstrand / shift-vector type / Conformal) ----------
-B_func  = Function('B',  positive=True)(r)
-beta_func = Function('beta')(r)
-g_metric = Matrix([
-    [-(1 - B_func**2 * beta_func**2),  B_func**2 * beta_func, 0, 0],
-    [ B_func**2 * beta_func,           B_func**2,             0, 0],
-    [ 0,                               0,                    B_func**2 * r**2, 0],
-    [ 0,                               0,                    0, B_func**2 * r**2 * sin(theta)**2]
-])
-METRIC_NAME        = "PG-type warp metric (Spatial Conformal)"
-METRIC_DESCRIPTION = "Painleve-Gullstrand-type metric with lapse N=1, radial shift beta(r), and areal radius"
+g_metric = metric_config['g_metric']
+METRIC_NAME = metric_config['metric_name']
+METRIC_DESCRIPTION = metric_config['metric_description']
+g_inv_metric = metric_config['g_inv_metric']
+e_tetrad = metric_config['e_tetrad']
+SELECTED_METRIC_SUMMARY = f"{METRIC_KEY}: {METRIC_NAME}"
 
 # ------------------------------------------------------------------------------
-# 1.4  INVERSE METRIC  g^{μν}
-#      Set to None to compute automatically via SymPy's .inv() method.
-#      For diagonal metrics you may supply it manually for speed.
+# 1.4  HOW TO ADD A NEW BUILT-IN METRIC
+#      Open gr_metric_library.py and add one more entry inside
+#      build_builtin_metric_library(). Each entry uses the same keys as
+#      CUSTOM_METRIC_CONFIG above.
 # ------------------------------------------------------------------------------
-g_inv_metric = None   # None = auto-compute (recommended)
-
-# Schwarzschild inverse (manual, faster):
-# g_inv_metric = Matrix([
-#     [-1/f,  0,    0,                         0                     ],
-#     [    0,  f,   0,                         0                     ],
-#     [    0,  0, 1/r**2,                      0                     ],
-#     [    0,  0,  0,       1/(r**2 * sin(theta)**2)                 ]
-# ])
-
-# ------------------------------------------------------------------------------
-# 1.5  ORTHONORMAL TETRAD  e^μ_a  (optional)
-#      Supply a dim × dim Matrix where entry [μ, a] = e^μ_a
-#      to enable orthonormal-frame Einstein tensor and energy-condition analysis.
-#
-#      e_tetrad = None  →  auto-compute tetrad (when COMPUTE_TETRAD = True below)
-#                          The code detects diagonal vs ADM-shift metrics and builds
-#                          the tetrad automatically, then verifies g_{μν}e^μ_a e^ν_b = η_{ab}.
-#
-#      Supplying a Matrix here always takes priority over auto-compute.
-#
-#      Convention: e^μ_a satisfies  g_{μν} e^μ_a e^ν_b = η_{ab}
-#      where η = diag(-1,+1,+1,+1).
-# ------------------------------------------------------------------------------
-# Schwarzschild tetrad (uncomment to override auto-compute):
-# e_tetrad = Matrix([
-#     [1/sqrt(f),     0,      0,                   0            ],
-#     [        0, sqrt(f),    0,                   0            ],
-#     [        0,     0,    1/r,                   0            ],
-#     [        0,     0,      0,   1/(r*sin(theta))             ]
-# ])
-e_tetrad = None   # None = auto-compute (if COMPUTE_TETRAD = True) or skip (if False)
-    
-# ------------------------------------------------------------------------------
-# 1.6  LATEX SUBSTITUTIONS FOR CLEAN OUTPUT
+# 1.5  LATEX SUBSTITUTIONS FOR CLEAN OUTPUT
 #      Map raw SymPy latex strings to prettier alternatives.
 #      Applied as simple string replacements after sp.latex() is called.
 # ------------------------------------------------------------------------------
@@ -197,19 +173,24 @@ latex_subs = {
 }
 
 # ------------------------------------------------------------------------------
-# 1.7  COMPUTATION FLAGS
+# 1.6  COMPUTATION FLAGS
 # ------------------------------------------------------------------------------
 COMPUTE_WEYL        = True   # Weyl conformal tensor (4D, expensive)
 COMPUTE_KRETSCHMANN = True   # Kretschmann scalar (very expensive for complex metrics)
 COMPUTE_GEODESICS   = True   # Geodesic equations
 COMPUTE_KILLING     = True   # Detect cyclic coordinates / Killing vectors
 COMPUTE_TETRAD      = True   # Auto-compute orthonormal tetrad via ADM decomposition.
+                              # Set this flag to True if you want the code to build the tetrad automatically.
+                              # Do NOT set e_tetrad = True; e_tetrad must be a Matrix or None.
+                              # Gauge convention: diagonal metrics use the canonical
+                              # coordinate-aligned static tetrad; metrics with shift
+                              # terms use the ADM/Eulerian tetrad of the chosen slicing.
                               # Set False to skip Sections 8 & 9 entirely (old behaviour).
                               # A user-supplied e_tetrad above always takes priority.
 FAST_MODE           = False  # True = skip Weyl and Kretschmann (recommended for first runs)
 
 # ------------------------------------------------------------------------------
-# 1.8  OUTPUT / DISPLAY OPTIONS
+# 1.7  OUTPUT / DISPLAY OPTIONS
 # ------------------------------------------------------------------------------
 OUTPUT_FILENAME = "gr_report"      # Base filename for .tex and .pdf (no extension)
 AUTHOR_NAME     = "SymPy GR Engine"
@@ -350,6 +331,12 @@ def run_computations(g_metric, coords, dim,
 
     active_tetrad = e_tetrad   # user-supplied takes priority
 
+    if isinstance(active_tetrad, bool):
+        raise TypeError(
+            "e_tetrad must be a SymPy Matrix or None, not a boolean. "
+            "Did you mean COMPUTE_TETRAD = True?"
+        )
+
     if active_tetrad is not None:
         # User-supplied tetrad: store and verify
         progress("  User-supplied tetrad detected — verifying orthonormality …")
@@ -381,8 +368,9 @@ def run_computations(g_metric, coords, dim,
             results['tetrad_residual'] = residual
             progress(f"  Tetrad verification: {'PASSED ✓' if passed else 'FAILED ✗'}")
         except Exception as exc:
-            progress(f"  WARNING: compute_tetrad_adm failed: {exc}")
-            progress("  Set e_tetrad manually in Section 1 to enable frame analysis.")
+            progress(f"  WARNING: automatic tetrad construction failed: {exc}")
+            progress("  Orthonormal-frame projection and energy-condition diagnostics will be skipped.")
+            progress("  If you need that section, supply e_tetrad manually in Section 1.")
             active_tetrad = None
 
     else:
@@ -528,6 +516,7 @@ def main():
     progress(" GR CALCULATOR — Symbolic General Relativity Analysis")
     progress(" Powered by SymPy")
     progress("=" * 60)
+    progress(f"Metric key: {METRIC_KEY}")
     progress(f"Metric   : {METRIC_NAME}")
     progress(f"Dimension: {dim}")
     progress(f"Coords   : {[str(c) for c in coords]}")

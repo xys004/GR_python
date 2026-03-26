@@ -1,0 +1,21 @@
+{
+  "title": "GR_python: Symbolic General Relativity Calculator and Report Generator",
+  "upload_type": "software",
+  "license": "BSD-3-Clause",
+  "description": "Symbolic General Relativity calculator and report generator powered by SymPy and LaTeX. The repository supports local script-based execution, Spyder/local IDE workflows, Linux/cloud execution, and a Google Colab notebook workflow.",
+  "creators": [
+    {
+      "name": "Bolivar, Nelson",
+      "affiliation": "Astrum Drive Technologies"
+    }
+  ],
+  "keywords": [
+    "general relativity",
+    "symbolic computation",
+    "sympy",
+    "tensor calculus",
+    "spacetime metrics",
+    "warp metrics"
+  ],
+  "notes": "Software metadata prepared for GitHub-Zenodo archiving. AI assistance supported parts of the development and documentation workflow."
+}

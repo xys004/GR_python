@@ -136,6 +136,7 @@ def add_align(lhs, rhs):
 #     (g entries ≤126 chars: OK; ginv entries ≥199 chars: 132pt overflow)
 # ==============================================================================
 LATEX_MEDIUM_THRESHOLD = 400   # chars: above this → use multline* splitting
+LATEX_FORCE_SPLIT_THRESHOLD = 180  # chars: above this, prefer explicit splitting over dmath*
 MATRIX_ENTRY_THRESHOLD = 150   # chars: any single matrix entry above → component list
 
 
@@ -181,6 +182,46 @@ def _extract_single_fraction(s):
     return numerator, denominator, remainder
 
 
+def _strip_outer_parens(s):
+    """
+    Remove one pair of enclosing parentheses when they wrap the entire string.
+    """
+    s = s.strip()
+    if len(s) < 2 or s[0] != '(' or s[-1] != ')':
+        return s
+
+    depth = 0
+    for i, c in enumerate(s):
+        if c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
+            if depth == 0 and i != len(s) - 1:
+                return s
+    return s[1:-1].strip()
+
+
+def _unwrap_signed_expression(s):
+    """
+    Split an expression into an optional leading sign and the core expression.
+
+    Examples
+    --------
+    '-(\frac{A}{B})' -> ('-', '\frac{A}{B}')
+    '+(a+b)'          -> ('+', 'a+b')
+    '\frac{A}{B}'    -> ('',  '\frac{A}{B}')
+    """
+    s = s.strip()
+    if not s:
+        return '', s
+
+    sign = ''
+    if s[0] in '+-':
+        sign = s[0]
+        s = s[1:].strip()
+    return sign, _strip_outer_parens(s)
+
+
 def _find_toplevel_plusminus(s):
     """
     Return a list of indices where '+' or '-' appears at brace-depth 0 in s.
@@ -215,89 +256,67 @@ def split_long_equation(lhs, rhs, inside_tcolorbox=False):
     Produce LaTeX lines for  'lhs = rhs'  with automatic overflow prevention.
 
     Strategy (applied in priority order):
-    ─────────────────────────────────────
-    1. Short (len ≤ LATEX_MEDIUM_THRESHOLD):
-         → dmath* (breqn handles line-breaking for non-monolithic expressions)
-
-    2. Single fraction  \\frac{N}{D}  where N has top-level +/− split points:
-         → multline* written as  \\frac{1}{D}\\Bigl( N_1 \\\\ + N_2 \\\\ ... \\Bigr)
-         Mathematically equivalent; splits the numerator across lines.
-
-    3. Top-level sum (not a fraction) with top-level +/− split points:
-         → multline*: split at each +/− sign, one term per line.
-
-    4. Monolithic (no split points — a single nested fraction or product):
-         → {\\sloppy \\begin{dmath*}...\\end{dmath*}}
-         Relaxes TeX's strictness; may still cause slight overflow for
-         pathologically long atomic tokens, but avoids hard overflow.
-
-    Both dmath* and multline* work correctly inside tcolorbox[breakable].
-
-    Parameters
-    ----------
-    lhs              : str  — LaTeX for the left-hand side (e.g. r'\\mathcal{K}')
-    rhs              : str  — LaTeX for the right-hand side expression
-    inside_tcolorbox : bool — reserved for future context-specific adjustments
-
-    Returns
-    -------
-    list of str — LaTeX source lines
+    1. Explicitly split long fractions or sums, including wrappers such as
+       ``-(\frac{...}{...})`` that appear in geodesic equations.
+    2. Short expressions (len <= LATEX_MEDIUM_THRESHOLD):
+       use dmath* so breqn can do its usual line breaking.
+    3. Monolithic fallback: use a sloppy dmath* block.
     """
     rhs = rhs.strip()
     n   = len(rhs)
+    sign, core_rhs = _unwrap_signed_expression(rhs)
 
-    # ── Case 1: short enough for dmath* ──────────────────────────────────────
-    if n <= LATEX_MEDIUM_THRESHOLD:
-        return add_dmath(f'{lhs} = {rhs}')
-
-    # ── Case 2: single \\frac{N}{D} with splittable numerator ─────────────────
-    num, den, rest = _extract_single_fraction(rhs)
-    if num is not None and den is not None and not rest.strip():
+    num, den, rest = _extract_single_fraction(core_rhs)
+    if (
+        num is not None and den is not None and not rest.strip()
+        and n > LATEX_FORCE_SPLIT_THRESHOLD
+    ):
         splits = _find_toplevel_plusminus(num)
         if splits:
-            # Slice numerator into segments at each split point
             segs, prev = [], 0
             for sp in splits:
                 segs.append(num[prev:sp])
                 prev = sp
             segs.append(num[prev:])
 
-            # Build align* with the factored form  (1/D) * (N1 + N2 + ...)
-            # align* aligns every continuation line at the & marker so that
-            # all terms sit flush under the = sign — far cleaner than multline*
-            # which left-aligns line 1, centres middle lines, right-aligns last.
             out = [r'\begin{align*}']
-            out.append(f'  {lhs} &= \\frac{{1}}{{{den}}}\\Bigl({segs[0].strip()} \\\\')
+            prefix = '-' if sign == '-' else ''
+            out.append(f'  {lhs} &= {prefix}\\frac{{1}}{{{den}}}\\Bigl({segs[0].strip()} \\\\')
             for seg in segs[1:-1]:
                 out.append(f'  &\\quad {seg.strip()} \\\\')
-            # Last segment: close the big parenthesis (no trailing \\)
             out.append(f'  &\\quad {segs[-1].strip()}\\Bigr)')
             out.append(r'\end{align*}')
             return out
 
-    # ── Case 3: top-level sum (not a fraction) ────────────────────────────────
-    top_splits = _find_toplevel_plusminus(rhs)
-    if top_splits:
+    top_splits = _find_toplevel_plusminus(core_rhs)
+    if top_splits and n > LATEX_FORCE_SPLIT_THRESHOLD:
         segs, prev = [], 0
         for sp in top_splits:
-            segs.append(rhs[prev:sp])
+            segs.append(core_rhs[prev:sp])
             prev = sp
-        segs.append(rhs[prev:])
+        segs.append(core_rhs[prev:])
 
-        # align* keeps all continuation lines left-aligned at a consistent
-        # &\quad indent — much cleaner than multline* staircase layout.
         out = [r'\begin{align*}']
-        out.append(f'  {lhs} &= {segs[0].strip()} \\\\')
-        for seg in segs[1:-1]:
-            out.append(f'  &\\quad {seg.strip()} \\\\')
-        out.append(f'  &\\quad {segs[-1].strip()}')
+        if sign == '-':
+            out.append(f'  {lhs} &= -\\Bigl({segs[0].strip()} \\\\')
+            for seg in segs[1:-1]:
+                out.append(f'  &\\quad {seg.strip()} \\\\')
+            out.append(f'  &\\quad {segs[-1].strip()}\\Bigr)')
+        else:
+            out.append(f'  {lhs} &= {segs[0].strip()} \\\\')
+            for seg in segs[1:-1]:
+                out.append(f'  &\\quad {seg.strip()} \\\\')
+            out.append(f'  &\\quad {segs[-1].strip()}')
         out.append(r'\end{align*}')
         return out
 
-    # ── Case 4: monolithic fallback — \\sloppy + dmath* ──────────────────────
-    # \sloppy relaxes TeX's inter-word and inter-character spacing constraints,
-    # giving breqn more room to break the line. This avoids a hard crash/overflow
-    # for atomic tokens that truly cannot be split (e.g. a single enormous symbol).
+    if n <= LATEX_MEDIUM_THRESHOLD:
+        return add_dmath(f'{lhs} = {rhs}')
+
+    if num is not None and den is not None and not rest.strip():
+        prefix = '-' if sign == '-' else ''
+        return add_dmath(f'{lhs} = {prefix}\\frac{{{num}}}{{{den}}}')
+
     return [
         r'{\sloppy',
         r'\begin{dmath*}',
@@ -305,7 +324,6 @@ def split_long_equation(lhs, rhs, inside_tcolorbox=False):
         r'\end{dmath*}',
         r'}',
     ]
-
 
 def matrix_is_complex(mat, threshold=MATRIX_ENTRY_THRESHOLD):
     """
@@ -343,20 +361,33 @@ def matrix_to_component_list(mat, row_labels, col_labels, tensor_name):
     Used when matrix entries are too long to display in a pmatrix without
     overflowing the page (triggered by matrix_is_complex()).
 
-    Each non-zero entry T_{row col} = expr is rendered via split_long_equation,
-    so even very long entries are handled gracefully.
+    Each non-zero entry is rendered via split_long_equation, so even very
+    long entries are handled gracefully. The tensor_name argument is mapped
+    to the appropriate covariant / contravariant notation for the known
+    tensors used by this report.
 
     Parameters
     ----------
     mat         : sympy.Matrix
-    row_labels  : list of str  — LaTeX index label for each row    (e.g. ['t','r',r'\\theta',r'\\varphi'])
+    row_labels  : list of str  — LaTeX index label for each row
     col_labels  : list of str  — LaTeX index label for each column
-    tensor_name : str          — LaTeX symbol for the tensor (e.g. 'g', 'R', 'G')
+    tensor_name : str          — symbolic tensor label (e.g. 'g', 'g^', 'e')
 
     Returns
     -------
     list of str — LaTeX lines (sequence of dmath*/multline* blocks)
     """
+    def component_lhs(row_label, col_label):
+        if tensor_name == 'g^':
+            return f'g^{{{row_label}{col_label}}}'
+        if tensor_name in {'g', 'R', 'G', r'\hat{G}', r'\Delta'}:
+            return f'{tensor_name}_{{{row_label}{col_label}}}'
+        if tensor_name == 'E':
+            return f'E^{{{row_label}}}_{{{col_label}}}'
+        if tensor_name == 'e':
+            return f'e^{{{row_label}}}_{{{col_label}}}'
+        return f'{tensor_name}_{{{row_label}{col_label}}}'
+
     out = [r'\par\noindent\textit{Non-zero components (matrix form exceeds page width):}']
     has_any = False
     for i in range(mat.rows):
@@ -369,7 +400,7 @@ def matrix_to_component_list(mat, row_labels, col_labels, tensor_name):
             if entry == S.Zero:
                 continue
             has_any = True
-            lhs_str = f'{tensor_name}_{{{row_labels[i]}{col_labels[j]}}}'
+            lhs_str = component_lhs(row_labels[i], col_labels[j])
             rhs_str = latex(entry)
             out += split_long_equation(lhs_str, rhs_str)
     if not has_any:
@@ -515,6 +546,103 @@ def make_tcolorbox(title, content_lines, color='boxblue'):
 # ==============================================================================
 
 
+def assemble_comparison_report(comparison, coords, metric_name, description,
+                               author, latex_subs_dict,
+                               beta_expr=None, B_expr=None,
+                               profile_mode=None):
+    """
+    Build a separate LaTeX document for comparisons against external formulas.
+    """
+    RL = []
+    compare_title = metric_name + ' Formula Comparison'
+    compare_desc = (
+        'Comparison between GR_python symbolic outputs and an external '
+        'reference set of formulas.'
+    )
+    RL += make_latex_header(compare_title, compare_desc, author)
+
+    RL.append(r'\begin{abstract}')
+    RL.append(r'\sloppy')
+    RL.append(
+        r'This document is separate from the main run report. It compares the '
+        r'direct symbolic outputs generated by GR\_python against an external '
+        r'reference formula set for the selected metric variant. Each quantity is '
+        r'reported together with its residual, so agreement and disagreement stay '
+        r'explicit.'
+    )
+    RL.append(r'\end{abstract}')
+
+    def lat(expr):
+        return expr_to_latex(expr, latex_subs_dict)
+
+    coord_str = r',\,'.join(latex(c) for c in coords)
+    RL.append(r'\section{Comparison Setup}')
+    RL.append(r'Coordinates used in the symbolic run: $(' + coord_str + r')$.')
+    RL.append(r'Variant under test: \textbf{' + comparison['variant'].replace('_', r'\_') + r'}.')
+    if profile_mode is not None:
+        RL.append(r'Profile mode: \texttt{' + str(profile_mode).replace('_', r'\_') + r'}.')
+    if beta_expr is not None:
+        RL += split_long_equation(r'\beta(r)', lat(beta_expr))
+    if B_expr is not None:
+        RL += split_long_equation(r'B(r)', lat(B_expr))
+
+    RL += make_tcolorbox(
+        'Interpretation',
+        [
+            r'\textbf{Computed} means the quantity extracted from the tensor objects '
+            r'generated by GR\_python in the current run.',
+            r'\textbf{Reference} means the formula supplied by the external notes or '
+            r'document being checked.',
+            r'\textbf{Residual} is Computed $-$ Reference after symbolic simplification.'
+        ],
+        'boxblue'
+    )
+
+    RL.append(r'\section{Pass/Fail Summary}')
+    RL.append(r'\begin{longtable}{lll}')
+    RL.append(r'\toprule')
+    RL.append(r'Quantity & Status & Comment \\')
+    RL.append(r'\midrule')
+    RL.append(r'\endfirsthead')
+    RL.append(r'\toprule')
+    RL.append(r'Quantity & Status & Comment \\')
+    RL.append(r'\midrule')
+    RL.append(r'\endhead')
+    for key in ('rho', 'p_r', 'p_perp', 'q', 'p_theta_minus_p_phi'):
+        status = 'OK' if comparison['checks'][key] else 'MISMATCH'
+        comment = 'Residual simplifies to zero' if comparison['checks'][key] else 'Inspect residual below'
+        label = key.replace('_', r'\_')
+        RL.append(label + r' & ' + status + r' & ' + comment + r' \\')
+    RL.append(r'\bottomrule')
+    RL.append(r'\end{longtable}')
+
+    RL.append(r'\section{Detailed Comparison}')
+    detail_items = [
+        ('rho', r'\rho'),
+        ('p_r', r'p_r'),
+        ('p_perp', r'p_\perp'),
+        ('q', r'q'),
+    ]
+    for key, lhs in detail_items:
+        RL.append(r'\subsection{' + key.replace('_', r'\_') + r'}')
+        RL += split_long_equation(lhs + r'_{\mathrm{computed}}', lat(comparison['computed'][key]))
+        RL += split_long_equation(lhs + r'_{\mathrm{reference}}', lat(comparison['expected'][key]))
+        RL += split_long_equation(lhs + r'_{\mathrm{residual}}', lat(comparison['residuals'][key]))
+        box_color = 'boxgreen' if comparison['checks'][key] else 'boxred'
+        box_title = 'Match' if comparison['checks'][key] else 'Mismatch'
+        box_body = [r'\textbf{Status:} ' + ('Residual is exactly zero.' if comparison['checks'][key] else 'Residual is non-zero after simplification.')]
+        RL += make_tcolorbox(box_title, box_body, box_color)
+
+    RL.append(r'\subsection{Angular Pressure Consistency}')
+    RL += split_long_equation(
+        r'p_{\theta} - p_{\phi}',
+        lat(comparison['residuals']['p_theta_minus_p_phi'])
+    )
+
+    RL += make_latex_footer()
+    return RL
+
+
 # ==============================================================================
 # SECTION 6 — REPORT ASSEMBLY
 # ==============================================================================
@@ -566,15 +694,27 @@ def assemble_report(results, coords, dim, metric_name, description,
     RL.append(r'\begin{abstract}')
     RL.append(r'\sloppy')   # relax line-breaking in abstract to prevent text overflow
     RL.append(
-        r'This document presents a complete symbolic General Relativity analysis '
-        r'of the \textbf{' + metric_name + r'} metric. All quantities were computed '
-        r'analytically using SymPy. The report includes: the metric and its inverse, '
-        r'Christoffel symbols, Riemann and Ricci tensors, Ricci scalar, Einstein tensor, '
-        r'curvature invariants (Kretschmann scalar, Weyl tensor), orthonormal-frame '
-        r'stress-energy components, energy conditions, geodesic equations, and '
-        r'conservation law verification.'
+        r'This report contains the direct symbolic output produced by the current '
+        r'GR\_python run for the \textbf{' + metric_name + r'} metric. All quantities '
+        r'shown here were derived analytically from the metric configured in the code '
+        r'for this run, using SymPy. The report includes the metric and its inverse, '
+        r'Christoffel symbols, curvature tensors, curvature scalars, orthonormal-frame '
+        r'stress-energy components, energy conditions, geodesic equations, and internal '
+        r'consistency checks.'
     )
     RL.append(r'\end{abstract}')
+    RL += make_tcolorbox(
+        'Report Scope',
+        [
+            r'\textbf{This PDF is a run report.} It contains only quantities computed '
+            r'directly from the metric used in the current symbolic execution.',
+            r'External reference formulas, literature expressions, and residuals against '
+            r'those references are intentionally excluded from this document.',
+            r'If a formula-comparison workflow is enabled, it should be exported as a '
+            r'separate comparison report so the provenance of each equation stays clear.'
+        ],
+        'boxgreen'
+    )
     RL.append(r'\newpage')
 
     def lat(expr):
@@ -853,8 +993,38 @@ def assemble_report(results, coords, dim, metric_name, description,
                 r'A \textbf{user-supplied} tetrad was provided in Section~1. '
                 r'The code verified orthonormality and projected the Einstein tensor.',
         }
+        _method_title = {
+            'diagonal': r'Automatic tetrad: diagonal static frame',
+            'adm_shift_diagonal_spatial': r'Automatic tetrad: ADM/Eulerian frame (diagonal spatial block)',
+            'adm_shift_cholesky': r'Automatic tetrad: ADM/Eulerian frame with Cholesky-fixed spatial triad',
+            'user_supplied': r'User-supplied tetrad',
+        }
+        _gauge_note = {
+            'diagonal':
+                r'This automatic choice corresponds to the canonical coordinate-aligned '
+                r'\textbf{static orthonormal frame}. For Schwarzschild in standard '
+                r'coordinates, this is the usual static tetrad.',
+            'adm_shift_diagonal_spatial':
+                r'This automatic choice corresponds to the \textbf{ADM/Eulerian frame} '
+                r'adapted to the $t = \mathrm{const}$ slicing. The code does not scan all '
+                r'local Lorentz-related tetrads; it fixes the natural frame of the chosen foliation.',
+            'adm_shift_cholesky':
+                r'This automatic choice corresponds to the \textbf{ADM/Eulerian frame} '
+                r'adapted to the $t = \mathrm{const}$ slicing, with the spatial triad '
+                r'fixed by Cholesky factorisation of $\gamma_{ij}$. This selects one definite '
+                r'spatial gauge among many equivalent orthonormal choices.',
+            'user_supplied':
+                r'The automatic gauge convention is not used here because the frame was '
+                r'provided manually by the user.',
+        }
+        RL.append(r'\textbf{Method used:} ' + _method_title.get(
+            _method, r'Tetrad method \texttt{' + _method.replace('_', r'\_') + r'}'))
         RL.append(_method_desc.get(_method,
             r'Tetrad constructed by method: \texttt{' + _method.replace('_', r'\_') + r'}.'))
+        RL.append(r'\textbf{Gauge/frame convention:} ' + _gauge_note.get(
+            _method,
+            r'The code used the stored tetrad method without additional gauge metadata.'
+        ))
 
         # ------------------------------------------------------------------
         # 8.2 — ADM Lapse and Shift  (only for ADM methods)
@@ -996,32 +1166,56 @@ def assemble_report(results, coords, dim, metric_name, description,
         ec_lines += split_long_equation(r'\rho', lat(ec['rho']), inside_tcolorbox=True)
         for i, p in enumerate(ec['pressures']):
             ec_lines += split_long_equation(f'p_{i+1}', lat(p), inside_tcolorbox=True)
+        for i, q in enumerate(ec.get('fluxes', [])):
+            if ec.get('has_flux'):
+                ec_lines += split_long_equation(f'q_{i+1}', lat(q), inside_tcolorbox=True)
         RL += make_tcolorbox('Physical stress-energy', ec_lines, 'boxblue')
 
         RL.append(r'\subsection{Null Energy Condition (NEC)}')
-        RL.append(
-            r'NEC requires $\rho + p_i \geq 0$ for all principal pressures $p_i$. '
-            r'Violation implies exotic (negative-energy) matter.'
-        )
+        if ec.get('has_flux'):
+            RL.append(
+                r'The orthonormal stress tensor has non-zero flux terms $q_i = T_{\hat{0}\hat{i}}$. '
+                r'In that case the simple diagonal formula $\rho + p_i \geq 0$ is not the full story. '
+                r'The directional null contractions are $\rho + p_i \pm 2 q_i$, and the strongest '
+                r'flux-aware null margin is $\rho + p_i - 2|q_i|$.'
+            )
+        else:
+            RL.append(
+                r'NEC requires $\rho + p_i \geq 0$ for all principal pressures $p_i$. '
+                r'Violation implies exotic (negative-energy) matter.'
+            )
         for i, nec_expr in enumerate(ec['NEC']):
             RL += split_long_equation(rf'\rho + p_{i+1}', lat(nec_expr))
+        if ec.get('has_flux'):
+            for i, expr in enumerate(ec.get('NEC_plus', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} + 2 q_{i+1}', lat(expr))
+            for i, expr in enumerate(ec.get('NEC_minus', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} - 2 q_{i+1}', lat(expr))
+            for i, expr in enumerate(ec.get('NEC_flux_margin', [])):
+                RL += split_long_equation(rf'\rho + p_{i+1} - 2 |q_{i+1}|', lat(expr))
 
         RL.append(r'\subsection{Weak Energy Condition (WEC)}')
-        RL.append(r'WEC: $\rho \geq 0$ (energy density non-negative) and NEC.')
+        RL.append(r'WEC requires $\rho \geq 0$ together with the relevant null inequalities.')
+        RL += split_long_equation(r'\rho', lat(ec['WEC_rho']))
 
         RL.append(r'\subsection{Strong Energy Condition (SEC)}')
-        RL.append(r'SEC: $\rho + \sum_i p_i \geq 0$.')
+        RL.append(r'SEC diagnostic: $\rho + \sum_i p_i \geq 0$.')
         RL += split_long_equation(r'\rho + \textstyle\sum_i p_i', lat(ec['SEC']))
 
         RL.append(r'\subsection{Dominant Energy Condition (DEC)}')
         RL.append(
-            r'DEC: $\rho \geq |p_i|$ — energy flows causally, '
-            r'no superluminal energy transport.'
+            r'A useful symbolic DEC diagnostic is $\rho \geq |p_i|$. '
+            r'When flux terms are present, also inspect the flux magnitude and the '
+            r'flux-aware null margins above before drawing a physical conclusion.'
         )
         RL.append(
-            r'\textit{(The DEC requires knowledge of the sign of $\rho$ relative '
-            r'to $|p_i|$; substitute explicit parameter values to evaluate.)}'
+            r'\textit{(For symbolic runs, substitute explicit parameter values to determine signs.)}'
         )
+        for i, dec_expr in enumerate(ec.get('DEC_pressures', [])):
+            RL += split_long_equation(rf'\rho - |p_{i+1}|', lat(dec_expr))
+        if ec.get('has_flux'):
+            for i, expr in enumerate(ec.get('DEC_flux', [])):
+                RL += split_long_equation(rf'\rho - |q_{i+1}|', lat(expr))
     else:
         RL.append(
             r'\textit{Energy conditions require an orthonormal tetrad. '
@@ -1160,16 +1354,22 @@ def assemble_report(results, coords, dim, metric_name, description,
     RL.append(r'Verify $g^{\mu\rho}\,g_{\rho\nu} = \delta^\mu{}_\nu$.')
     product_check = R['ginv'] * R['g']
     id_residual = product_check - eye(dim)
-    max_res = max(abs(cancel(id_residual[i, j]))
-                  for i in range(dim) for j in range(dim))
-    if max_res == S.Zero:
+    residual_entries = [cancel(id_residual[i, j]) for i in range(dim) for j in range(dim)]
+    if all(entry == S.Zero for entry in residual_entries):
         RL += make_tcolorbox(
             'Metric Inverse',
             [r'\textbf{VERIFIED:} $g^{\mu\rho}\,g_{\rho\nu} = \delta^\mu{}_\nu$. $\checkmark$'],
             'boxgreen'
         )
     else:
-        RL.append(r'\textit{Max residual entry: }' + lat(max_res))
+        RL += make_tcolorbox(
+            'Metric Inverse --- WARNING',
+            [r'\textbf{Residual matrix:} $g^{\mu\rho}\,g_{\rho\nu} - \delta^\mu{}_\nu \neq 0$.'],
+            'boxred'
+        )
+        RL.append(r'\begin{equation}')
+        RL.append(r'  \Delta^\mu{}_\nu = ' + matrix_to_latex(id_residual))
+        RL.append(r'\end{equation}')
 
     RL += make_latex_footer()
     return RL

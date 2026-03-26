@@ -1,140 +1,92 @@
-# GR Calculator — Google Colab Edition
+# GR Calculator - Google Colab Edition
 
-Symbolic General Relativity analysis powered by **SymPy**, with optional GPU
-numerical post-processing via CuPy / JAX and parallel symbolic computation
-on multi-core Linux machines.
+Symbolic General Relativity analysis powered by SymPy, with optional GPU numerical post-processing.
 
----
+Spanish quick guide: [GUIA_USO_ES.md](C:/Users/Nelson/Downloads/GR_python/GUIA_USO_ES.md)
+
+## Repo Intent
+
+This repository is meant to be used in two natural ways:
+
+- as a notebook workflow in Colab
+- as a script workflow in Spyder, local Python, or a cloud VM
+
+If you are in Colab, start from `GR_Colab.ipynb`.
+If you are local or in Google Cloud, start from `gr_main.py` / `gr_calculator.py` in the project root.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `GR_Colab.ipynb` | Main notebook — open this in Google Colab |
-| `gr_tensors.py` | All symbolic GR computations + parallel helpers |
+| `GR_Colab.ipynb` | Main notebook |
+| `gr_main.py` | Local driver and configuration |
+| `gr_metric_library.py` | Built-in metric registry |
+| `gr_tensors.py` | Symbolic tensor engine |
 | `gr_latex.py` | LaTeX report assembly |
-| `gr_main.py` | User configuration, pipeline, PDF compiler |
-| `gr_numerics.py` | Numerical evaluation, GPU support, geodesic integration |
+| `gr_numerics.py` | Numerical evaluation and plotting |
+| `gr_warp.py` | Warp-document helpers and comparisons |
 
----
+## Colab Use Step by Step
 
-## Quick Start
+1. Open `GR_Colab.ipynb` in Google Colab.
+2. Run **Cell 1** to install LaTeX and Python dependencies.
+3. Run **Cell 2** to clone the GitHub repo and import the modules.
+4. Edit **Cell 3**.
+5. Run **Cell 4** for the symbolic calculation.
+6. Run **Cell 5** to generate the report files.
+7. If you want numerics and plots, continue with **Cell 6** and **Cell 7**. **Cell 8** is an advanced geodesic template and needs a real RHS before it becomes a physical trajectory.
 
-### 1. Upload to Google Colab
+## What Each Important Cell Does
 
-1. Go to [colab.research.google.com](https://colab.research.google.com)
-2. Open `GR_Colab.ipynb` (File → Upload notebook)
-3. Upload all five `.py` files to `/content/` via the Files panel or Cell 2
+- **Cell 1** installs packages
+- **Cell 2** loads the project from GitHub
+- **Cell 3** is where you choose the metric/profile/report options
+- **Cell 4** runs the symbolic GR computation
+- **Cell 5** writes `gr_report.pdf` and, if enabled, `gr_comparison_report.pdf`
 
-### 2. Run cells in order
+## Automatic Tetrad Convention
 
-| Cell | Action |
-|---|---|
-| **Cell 1** | Install LaTeX + Python packages (once per session) |
-| **Cell 2** | Upload modules and detect GPU backend |
-| **Cell 3** | **Edit this cell** — set your metric, coordinates, and flags |
-| **Cell 4** | Run all symbolic GR computations |
-| **Cell 5** | Generate PDF report (downloads to `/content/gr_report.pdf`) |
-| **Cell 6** | Numerical evaluation of GR scalars on a coordinate grid |
-| **Cell 7** | 2-D heat maps of GR scalars |
-| **Cell 8** | Geodesic integration and trajectory plot |
+- `COMPUTE_TETRAD = True` enables the automatic orthonormal frame
+- for diagonal metrics, the code uses the canonical coordinate-aligned static tetrad
+- for metrics with `g_{0i}` shift terms, it uses the ADM/Eulerian tetrad adapted to the `t = const` slicing
+- if you want a different but equivalent tetrad, supply it manually with `e_tetrad = Matrix(...)`
 
----
+## Standard Warp-Document Workflow
 
-## Changing the Metric
-
-Edit **Cell 3** in the notebook. The pattern is:
-
-```python
-from sympy import symbols, Matrix, sin
-
-t, r, theta, phi = symbols('t r theta phi', real=True)
-coords = [t, r, theta, phi]
-dim    = 4
-
-M = symbols('M', positive=True)
-
-grm.g_metric = Matrix([
-    [...],  # row for t
-    [...],  # row for r
-    [...],  # row for theta
-    [...],  # row for phi
-])
-grm.METRIC_NAME        = 'My Metric'
-grm.METRIC_DESCRIPTION = 'Short description'
-```
-
-Example metrics are commented out in `gr_main.py` (Minkowski, FRW, Kerr-type, etc.).
-
----
-
-## GPU Acceleration
-
-GPU accelerates **numerical post-processing only** (cells 6–8).
-Symbolic SymPy computation always runs on CPU.
-
-To enable GPU:
-
-1. In Colab: *Runtime → Change runtime type → T4 GPU*
-2. In Cell 1, uncomment the GPU package install:
-   ```
-   !pip install -q cupy-cuda12x        # for CuPy (recommended)
-   # OR
-   !pip install -q "jax[cuda12]" diffrax  # for JAX + diffrax
-   ```
-3. In Cell 3, set `grm.USE_GPU = True`
-
-The `grn.detect_backend()` call in Cell 2 confirms which backend is active.
-
----
-
-## Parallel Symbolic Computation
-
-On Colab (Linux) you can parallelise the Christoffel and Riemann symbol
-computation across multiple CPU cores:
+In **Cell 3**, the usual configuration is:
 
 ```python
-grm.USE_PARALLEL    = True
-grm.N_PARALLEL_JOBS = 2   # free Colab tier typically has 2 cores
+VARIANT = 'variant_a'
+PROFILE_MODE = 'document_generic'
+RUN_DOCUMENT_COMPARISON = True
+GENERATE_COMPARISON_REPORT = True
 ```
 
-**Note:** This uses Python's `ProcessPoolExecutor` with `fork` and only works
-on Linux. Do **not** enable on Windows (use the original `GR_python` folder there).
+This means:
 
----
+- `gr_report.pdf` is the direct output of the symbolic run
+- `gr_comparison_report.pdf` is optional and only used for checks against external formulas
 
-## Local Run (without Colab)
+## If You Want a Brand-New Metric
 
-The Colab fork also runs locally on Linux/macOS:
+For a completely new metric outside the predefined warp variants, use the root driver [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) with the same workflow as the desktop version:
 
-```bash
-cd GR_python_colab
-python gr_main.py
-```
+1. set `METRIC_KEY = 'custom'`
+2. define any extra symbols/functions in Section 1.2
+3. fill `CUSTOM_METRIC_CONFIG`
+4. run the script locally, or adapt the same metric definition into a notebook cell
 
-It auto-detects that `__file__` is defined and writes output next to `gr_main.py`.
+Two commented examples are already included in [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py):
 
----
+- a diagonal ansatz
+- a metric with a `dt dr` cross-term
 
-## Dependency Chain (no circular imports)
+Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, a Morris-Thorne wormhole template, and the built-in `warp_doc_*` variants from your document.
 
-```
-gr_tensors.py   (sympy + stdlib — no project imports)
-      ↓
-gr_latex.py     (imports from gr_tensors)
-      ↓
-gr_main.py      (imports from gr_tensors and gr_latex)
+For a first numerical demo in Colab, switch Cell 3 to `PROFILE_MODE = 'schwarzschild_pg'`.
 
-gr_numerics.py  (imports numpy/cupy/jax + sympy.lambdify — standalone)
-```
+## GPU and Parallel Notes
 
----
-
-## Requirements
-
-- Python 3.8+
-- sympy
-- matplotlib
-- scipy (for geodesic fallback)
-- Optional: cupy-cuda12x, jax, diffrax (for GPU acceleration)
-- Optional: texlive-latex-extra (for PDF generation)
+- Symbolic SymPy calculations run on CPU.
+- GPU support accelerates only numerical post-processing.
+- Parallel symbolic execution is available on Linux/Colab for selected stages.
