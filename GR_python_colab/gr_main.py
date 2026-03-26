@@ -108,7 +108,8 @@ AVAILABLE_METRIC_KEYS = list_builtin_metric_keys()
 #   warp_doc_baseline
 #   warp_doc_variant_a
 #   warp_doc_variant_b
-METRIC_KEY = 'pg_spatial_conformal'
+# Recommended first run: start with 'schwarzschild' to verify your environment.
+METRIC_KEY = 'schwarzschild'
 
 # One-off custom metric:
 # 1. Set METRIC_KEY = 'custom'
@@ -206,7 +207,7 @@ COMPUTE_TETRAD      = True   # Auto-compute orthonormal tetrad via ADM decomposi
                               # A user-supplied e_tetrad above always takes priority.
 FAST_MODE           = False  # True = skip Weyl and Kretschmann (recommended for first runs)
 
-# --- Colab / parallel / GPU flags (new in Colab fork) -------------------------
+# --- Optional performance flags (mainly useful in Colab / Linux) --------------
 USE_PARALLEL    = False   # True = parallel Christoffel + Riemann (Linux/Colab only)
 N_PARALLEL_JOBS = 4       # Number of parallel worker processes
 USE_GPU         = False   # True = use CuPy/JAX for numerical post-processing via gr_numerics
@@ -408,8 +409,9 @@ def run_computations(g_metric, coords, dim,
             results['tetrad_residual'] = residual
             progress(f"  Tetrad verification: {'PASSED ✓' if passed else 'FAILED ✗'}")
         except Exception as exc:
-            progress(f"  WARNING: compute_tetrad_adm failed: {exc}")
-            progress("  Set e_tetrad manually in Section 1 to enable frame analysis.")
+            progress(f"  WARNING: automatic tetrad construction failed: {exc}")
+            progress("  Orthonormal-frame projection and energy-condition diagnostics will be skipped.")
+            progress("  If you need that section, supply e_tetrad manually in Section 1.")
             active_tetrad = None
 
     else:

@@ -51,6 +51,7 @@ It also generates a LaTeX report and, when `pdflatex` is available, a PDF report
    ```python
    METRIC_KEY = 'schwarzschild'
    ```
+   Recommended first run: keep `schwarzschild` until you confirm that the symbolic run, LaTeX, and PDF generation all work on your machine.
 4. Run [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) or run [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) directly.
 5. Check the generated files in the project folder:
    - `gr_report.tex`

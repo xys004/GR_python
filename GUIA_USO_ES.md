@@ -28,6 +28,7 @@ Esta guia resume como usar el proyecto en los dos escenarios principales:
    ```python
    METRIC_KEY = 'schwarzschild'
    ```
+   Recomendacion para la primera corrida: deja `schwarzschild` hasta confirmar que el calculo simbolico, LaTeX y el PDF funcionan bien en tu entorno.
 3. Corre [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) o [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
 4. Revisa los archivos generados en la carpeta del proyecto:
    - `gr_report.tex`
