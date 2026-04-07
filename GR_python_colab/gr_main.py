@@ -217,7 +217,7 @@ USE_GPU         = False   # True = use CuPy/JAX for numerical post-processing vi
 # 1.7  OUTPUT / DISPLAY OPTIONS
 # ------------------------------------------------------------------------------
 OUTPUT_FILENAME = "gr_report"      # Base filename for .tex and .pdf (no extension)
-AUTHOR_NAME     = "SymPy GR Engine"
+AUTHOR_NAME     = "nebolivar and his AI partners :)"
 
 
 # ==============================================================================

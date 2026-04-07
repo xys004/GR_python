@@ -5,7 +5,7 @@
   "description": "Symbolic General Relativity calculator and report generator powered by SymPy and LaTeX. The repository supports local script-based execution, Spyder/local IDE workflows, Linux/cloud execution, and a Google Colab notebook workflow.",
   "creators": [
     {
-      "name": "Bolivar, Nelson",
+      "name": "nebolivar and his AI partners :)",
       "affiliation": "Astrum Drive Technologies"
     }
   ],
@@ -17,5 +17,5 @@
     "spacetime metrics",
     "warp metrics"
   ],
-  "notes": "Software metadata prepared for GitHub-Zenodo archiving. AI assistance supported parts of the development and documentation workflow."
+  "notes": "Software metadata prepared for GitHub-Zenodo archiving. Author credit is intentionally presented as 'nebolivar and his AI partners :)'."
 }

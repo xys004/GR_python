@@ -111,9 +111,7 @@ El repo ahora incluye:
 - [.zenodo.json](.zenodo.json)
 
 Estos archivos dejan preparado el proyecto para archivarlo desde GitHub hacia Zenodo.
-La metadata actual usa a Nelson Bolivar como autor/creator y Astrum Drive Technologies como afiliacion.
-
-La asistencia de IA queda mencionada como nota de desarrollo, no como autor formal del software.
+La metadata actual usa `nebolivar and his AI partners :)` como autor/creator y Astrum Drive Technologies como afiliacion.
 
 ## 4. Como agregar una metrica nueva
 

@@ -9,8 +9,7 @@ abstract: >-
 type: software
 license: "BSD-3-Clause"
 authors:
-  - family-names: "Bolivar"
-    given-names: "Nelson"
+  - name: "nebolivar and his AI partners :)"
     affiliation: "Astrum Drive Technologies"
 repository-code: "https://github.com/xys004/GR_python"
 url: "https://github.com/xys004/GR_python"

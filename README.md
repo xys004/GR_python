@@ -129,9 +129,7 @@ The repository now includes:
 - [.zenodo.json](.zenodo.json)
 
 These files prepare the project for GitHub release archiving in Zenodo.
-Current creator metadata is set to Nelson Bolivar, affiliated with Astrum Drive Technologies.
-
-Note: AI assistance is mentioned in metadata notes and documentation, but not listed as a formal software author.
+Current creator credit is set to `nebolivar and his AI partners :)`, affiliated with Astrum Drive Technologies.
 
 
 ## License and Citation

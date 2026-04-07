@@ -193,7 +193,7 @@ FAST_MODE           = False  # True = skip Weyl and Kretschmann (recommended for
 # 1.7  OUTPUT / DISPLAY OPTIONS
 # ------------------------------------------------------------------------------
 OUTPUT_FILENAME = "gr_report"      # Base filename for .tex and .pdf (no extension)
-AUTHOR_NAME     = "SymPy GR Engine"
+AUTHOR_NAME     = "nebolivar and his AI partners :)"
 
 
 # ==============================================================================
