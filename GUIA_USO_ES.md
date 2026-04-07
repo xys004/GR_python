@@ -9,9 +9,9 @@ Esta guia resume como usar el proyecto en los dos escenarios principales:
 
 | Donde lo vas a correr | Archivo principal | Que hacer |
 |---|---|---|
-| Google Colab | [GR_python_colab/GR_Colab.ipynb](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/GR_Colab.ipynb) | Ejecutar las celdas en orden |
-| Spyder o Python local | [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) | Elegir `METRIC_KEY` y correr [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) |
-| Google Cloud o Linux remoto | [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) | Instalar dependencias y correr [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) |
+| Google Colab | [GR_python_colab/GR_Colab.ipynb](GR_python_colab/GR_Colab.ipynb) | Ejecutar las celdas en orden |
+| Spyder o Python local | [gr_main.py](gr_main.py) | Elegir `METRIC_KEY` y correr [gr_calculator.py](gr_calculator.py) |
+| Google Cloud o Linux remoto | [gr_main.py](gr_main.py) | Instalar dependencias y correr [gr_calculator.py](gr_calculator.py) |
 
 ## 1. Uso local paso a paso
 
@@ -23,20 +23,20 @@ Esta guia resume como usar el proyecto en los dos escenarios principales:
 
 ### Correr una metrica built-in
 
-1. Abri [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+1. Abri [gr_main.py](gr_main.py).
 2. En la Seccion 1, elegi una metrica con una sola linea. Por ejemplo:
    ```python
    METRIC_KEY = 'schwarzschild'
    ```
    Recomendacion para la primera corrida: deja `schwarzschild` hasta confirmar que el calculo simbolico, LaTeX y el PDF funcionan bien en tu entorno.
-3. Corre [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) o [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+3. Corre [gr_calculator.py](gr_calculator.py) o [gr_main.py](gr_main.py).
 4. Revisa los archivos generados en la carpeta del proyecto:
    - `gr_report.tex`
    - `gr_report.pdf` si `pdflatex` esta disponible
 
 ### Correr una metrica custom
 
-1. Abri [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+1. Abri [gr_main.py](gr_main.py).
 2. Cambia a:
    ```python
    METRIC_KEY = 'custom'
@@ -45,7 +45,7 @@ Esta guia resume como usar el proyecto en los dos escenarios principales:
 4. Completa `CUSTOM_METRIC_CONFIG`.
 5. Corre el script.
 
-Ejemplos ya incluidos en [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py):
+Ejemplos ya incluidos en [gr_main.py](gr_main.py):
 
 - una metrica diagonal con `alpha(r)`
 - una metrica con termino cruzado `dt dr` usando `beta(r)`
@@ -59,7 +59,7 @@ Ejemplos ya incluidos en [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_mai
 
 ## 2. Uso en Colab paso a paso
 
-1. Abri [GR_python_colab/GR_Colab.ipynb](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/GR_Colab.ipynb) en Google Colab.
+1. Abri [GR_python_colab/GR_Colab.ipynb](GR_python_colab/GR_Colab.ipynb) en Google Colab.
 2. Corre **Cell 1** para instalar dependencias.
 3. Corre **Cell 2** para clonar el repo e importar los modulos.
 4. Edita **Cell 3**.
@@ -85,7 +85,7 @@ Eso produce:
 
 ## 3. Metricas built-in disponibles
 
-Las metricas registradas actualmente en [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py) son:
+Las metricas registradas actualmente en [gr_metric_library.py](gr_metric_library.py) son:
 
 - `schwarzschild`
 - `reissner_nordstrom`
@@ -107,8 +107,8 @@ Las tres opciones `warp_doc_baseline`, `warp_doc_variant_a` y `warp_doc_variant_
 
 El repo ahora incluye:
 
-- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
-- [.zenodo.json](C:/Users/Nelson/Downloads/GR_python/.zenodo.json)
+- [CITATION.cff](CITATION.cff)
+- [.zenodo.json](.zenodo.json)
 
 Estos archivos dejan preparado el proyecto para archivarlo desde GitHub hacia Zenodo.
 La metadata actual usa a Nelson Bolivar como autor/creator y Astrum Drive Technologies como afiliacion.
@@ -126,7 +126,7 @@ La asistencia de IA queda mencionada como nota de desarrollo, no como autor form
 
 ### Opcion B: metrica built-in permanente
 
-1. Abri [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py).
+1. Abri [gr_metric_library.py](gr_metric_library.py).
 2. Agrega una nueva entrada dentro de `build_builtin_metric_library()`.
 3. Usa las mismas claves:
    - `g_metric`
@@ -134,7 +134,7 @@ La asistencia de IA queda mencionada como nota de desarrollo, no como autor form
    - `metric_description`
    - opcional `g_inv_metric`
    - opcional `e_tetrad`
-4. Luego selecciona esa nueva metrica desde [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) con:
+4. Luego selecciona esa nueva metrica desde [gr_main.py](gr_main.py) con:
    ```python
    METRIC_KEY = 'tu_nueva_metrica'
    ```
@@ -142,11 +142,11 @@ La asistencia de IA queda mencionada como nota de desarrollo, no como autor form
 
 ## Licencia y citacion
 
-Este proyecto se distribuye bajo la licencia [BSD 3-Clause](C:/Users/Nelson/Downloads/GR_python/LICENSE).
+Este proyecto se distribuye bajo la licencia [BSD 3-Clause](LICENSE).
 
 Si usas este software en investigacion, publicaciones o trabajo cientifico derivado,
 por favor cita el proyecto usando:
 
-- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
+- [CITATION.cff](CITATION.cff)
 - el DOI de Zenodo asociado a la release de GitHub
 

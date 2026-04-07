@@ -2,7 +2,7 @@
 
 Symbolic General Relativity analysis powered by SymPy, with optional GPU numerical post-processing.
 
-Spanish quick guide: [GUIA_USO_ES.md](C:/Users/Nelson/Downloads/GR_python/GUIA_USO_ES.md)
+Spanish quick guide: [GUIA_USO_ES.md](../GUIA_USO_ES.md)
 
 ## Repo Intent
 
@@ -69,19 +69,19 @@ This means:
 
 ## If You Want a Brand-New Metric
 
-For a completely new metric outside the predefined warp variants, use the root driver [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) with the same workflow as the desktop version:
+For a completely new metric outside the predefined warp variants, use the root driver [gr_main.py](../gr_main.py) with the same workflow as the desktop version:
 
 1. set `METRIC_KEY = 'custom'`
 2. define any extra symbols/functions in Section 1.2
 3. fill `CUSTOM_METRIC_CONFIG`
 4. run the script locally, or adapt the same metric definition into a notebook cell
 
-Two commented examples are already included in [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py):
+Two commented examples are already included in [gr_main.py](../gr_main.py):
 
 - a diagonal ansatz
 - a metric with a `dt dr` cross-term
 
-Reusable built-in metrics are stored in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, a Morris-Thorne wormhole template, and the built-in `warp_doc_*` variants from your document.
+Reusable built-in metrics are stored in [gr_metric_library.py](../gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, a Morris-Thorne wormhole template, and the built-in `warp_doc_*` variants from your document.
 
 For a first numerical demo in Colab, switch Cell 3 to `PROFILE_MODE = 'schwarzschild_pg'`.
 

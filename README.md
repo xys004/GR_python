@@ -2,15 +2,15 @@
 
 A symbolic General Relativity calculator and report generator powered by SymPy and LaTeX.
 
-Spanish quick guide: [GUIA_USO_ES.md](C:/Users/Nelson/Downloads/GR_python/GUIA_USO_ES.md)
+Spanish quick guide: [GUIA_USO_ES.md](GUIA_USO_ES.md)
 
 ## Choose Your Environment
 
 | Where you run it | Open this | What to do |
 |---|---|---|
-| Google Colab | [GR_python_colab/GR_Colab.ipynb](C:/Users/Nelson/Downloads/GR_python/GR_python_colab/GR_Colab.ipynb) | Run the notebook cells in order |
-| Spyder / local Python | [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) | Set `METRIC_KEY` and run [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) |
-| Google Cloud / Linux VM | [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) | Install dependencies, then run [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) |
+| Google Colab | [GR_python_colab/GR_Colab.ipynb](GR_python_colab/GR_Colab.ipynb) | Run the notebook cells in order |
+| Spyder / local Python | [gr_main.py](gr_main.py) | Set `METRIC_KEY` and run [gr_calculator.py](gr_calculator.py) |
+| Google Cloud / Linux VM | [gr_main.py](gr_main.py) | Install dependencies, then run [gr_calculator.py](gr_calculator.py) |
 
 ## What It Does
 
@@ -45,21 +45,21 @@ It also generates a LaTeX report and, when `pdflatex` is available, a PDF report
 
 ### Run a built-in metric
 
-1. Open [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+1. Open [gr_main.py](gr_main.py).
 2. In Section 1, leave the coordinates as they are unless you really want a different chart.
 3. Choose a built-in metric with one line, for example:
    ```python
    METRIC_KEY = 'schwarzschild'
    ```
    Recommended first run: keep `schwarzschild` until you confirm that the symbolic run, LaTeX, and PDF generation all work on your machine.
-4. Run [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py) or run [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) directly.
+4. Run [gr_calculator.py](gr_calculator.py) or run [gr_main.py](gr_main.py) directly.
 5. Check the generated files in the project folder:
    - `gr_report.tex`
    - `gr_report.pdf` if `pdflatex` is available
 
 ### Run a custom metric
 
-1. Open [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py).
+1. Open [gr_main.py](gr_main.py).
 2. Set:
    ```python
    METRIC_KEY = 'custom'
@@ -68,7 +68,7 @@ It also generates a LaTeX report and, when `pdflatex` is available, a PDF report
 4. Fill `CUSTOM_METRIC_CONFIG`.
 5. Run the script.
 
-Two ready-to-adapt examples are already included inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py):
+Two ready-to-adapt examples are already included inside [gr_main.py](gr_main.py):
 
 - a diagonal custom metric with a radial function `alpha(r)`
 - a metric with a `dt dr` cross-term controlled by `beta(r)`
@@ -90,13 +90,13 @@ The built-in metric registry currently includes:
 - `warp_doc_variant_a`
 - `warp_doc_variant_b`
 
-These are defined in [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py). The three `warp_doc_*` options correspond directly to the baseline, Variant A, and Variant B metrics from your warp notes.
+These are defined in [gr_metric_library.py](gr_metric_library.py). The three `warp_doc_*` options correspond directly to the baseline, Variant A, and Variant B metrics from your warp notes.
 
 ## Add a New Built-in Metric
 
 If you want a metric to become a reusable named option:
 
-1. Open [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py).
+1. Open [gr_metric_library.py](gr_metric_library.py).
 2. Add one more entry inside `build_builtin_metric_library()`.
 3. Reuse the same keys as `CUSTOM_METRIC_CONFIG`:
    - `g_metric`
@@ -104,14 +104,14 @@ If you want a metric to become a reusable named option:
    - `metric_description`
    - optional `g_inv_metric`
    - optional `e_tetrad`
-4. Go back to [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py) and set:
+4. Go back to [gr_main.py](gr_main.py) and set:
    ```python
    METRIC_KEY = 'your_new_key'
    ```
 
 ## Useful Flags
 
-Inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), the most useful switches are:
+Inside [gr_main.py](gr_main.py), the most useful switches are:
 
 - `FAST_MODE = True` to skip heavy invariant computations
 - `COMPUTE_TETRAD = True` to keep orthonormal-frame analysis enabled
@@ -125,8 +125,8 @@ Inside [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py), the most us
 
 The repository now includes:
 
-- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
-- [.zenodo.json](C:/Users/Nelson/Downloads/GR_python/.zenodo.json)
+- [CITATION.cff](CITATION.cff)
+- [.zenodo.json](.zenodo.json)
 
 These files prepare the project for GitHub release archiving in Zenodo.
 Current creator metadata is set to Nelson Bolivar, affiliated with Astrum Drive Technologies.
@@ -136,18 +136,18 @@ Note: AI assistance is mentioned in metadata notes and documentation, but not li
 
 ## License and Citation
 
-This project is released under the [BSD 3-Clause License](C:/Users/Nelson/Downloads/GR_python/LICENSE).
+This project is released under the [BSD 3-Clause License](LICENSE).
 
 If you use this software in research, publications, or derivative scientific work,
 please cite the project using:
 
-- [CITATION.cff](C:/Users/Nelson/Downloads/GR_python/CITATION.cff)
+- [CITATION.cff](CITATION.cff)
 - the Zenodo DOI associated with the GitHub release
 
 ## Project Structure
 
-- [gr_calculator.py](C:/Users/Nelson/Downloads/GR_python/gr_calculator.py): entry point
-- [gr_main.py](C:/Users/Nelson/Downloads/GR_python/gr_main.py): local user configuration and pipeline
-- [gr_metric_library.py](C:/Users/Nelson/Downloads/GR_python/gr_metric_library.py): built-in metric registry
-- [gr_tensors.py](C:/Users/Nelson/Downloads/GR_python/gr_tensors.py): symbolic tensor engine
-- [gr_latex.py](C:/Users/Nelson/Downloads/GR_python/gr_latex.py): LaTeX/PDF report builder
+- [gr_calculator.py](gr_calculator.py): entry point
+- [gr_main.py](gr_main.py): local user configuration and pipeline
+- [gr_metric_library.py](gr_metric_library.py): built-in metric registry
+- [gr_tensors.py](gr_tensors.py): symbolic tensor engine
+- [gr_latex.py](gr_latex.py): LaTeX/PDF report builder
