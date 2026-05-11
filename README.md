@@ -50,6 +50,7 @@ Spanish guide: [GUIA_USO_ES.md](GUIA_USO_ES.md)
 | `warp_doc_baseline` | Warp drive baseline metric |
 | `warp_doc_variant_a` | Warp drive Variant A |
 | `warp_doc_variant_b` | Warp drive Variant B |
+| `warp_doc_variant_b_alpha` | Full-spatial VdB/PG warp metric with generic lapse α(r) |
 
 ---
 
@@ -102,6 +103,8 @@ The default metric is `schwarzschild`. Output:
 - `gr_report.tex` — full LaTeX source
 - `gr_report.pdf` — compiled PDF (if pdflatex is available)
 
+Generated reports are intentionally treated as local outputs. They are ignored by Git so each run does not dirty the repository.
+
 ### 2 — Change the metric
 
 Open `gr_main.py`, Section 1.3:
@@ -110,6 +113,13 @@ Open `gr_main.py`, Section 1.3:
 METRIC_KEY = 'kerr'          # rotating black hole
 # METRIC_KEY = 'frw_flat'   # cosmology
 # METRIC_KEY = 'custom'     # fill CUSTOM_METRIC_CONFIG below
+```
+
+For the generalized Van den Broeck / PG metric with a symbolic lapse, use:
+
+```python
+METRIC_KEY = 'warp_doc_variant_b_alpha'
+COMPUTE_TETRAD = True
 ```
 
 ### 3 — Use a custom metric

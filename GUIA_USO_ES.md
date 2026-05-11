@@ -103,6 +103,7 @@ Para generar el PDF instalar MiKTeX (Windows) o TeX Live (Linux/macOS).
 | `warp_doc_baseline` | Métrica warp de referencia |
 | `warp_doc_variant_a` | Variante A de warp |
 | `warp_doc_variant_b` | Variante B de warp |
+| `warp_doc_variant_b_alpha` | Variante VdB/PG espacial completa con lapse genérico α(r) |
 
 ---
 

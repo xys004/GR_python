@@ -20,7 +20,7 @@ the existing entries.
 
 import sympy as sp
 from sympy import Function, Matrix, exp, sin, cos, sqrt, symbols, Rational
-from gr_warp import build_metric_configuration
+from gr_warp import build_metric_configuration, build_vdb_alpha_metric_configuration
 
 
 def build_builtin_metric_library(coords, parameter_context=None):
@@ -53,10 +53,12 @@ def build_builtin_metric_library(coords, parameter_context=None):
     beta_func = Function("beta")(r)
     beta_doc = Function("beta")(r)
     B_doc = Function("B")(r)
+    alpha_doc = Function("alpha", positive=True)(r)
 
     warp_doc_baseline = build_metric_configuration("baseline", coords, beta_doc)
     warp_doc_variant_a = build_metric_configuration("variant_a", coords, beta_doc, B_doc)
     warp_doc_variant_b = build_metric_configuration("variant_b", coords, beta_doc, B_doc)
+    warp_doc_variant_b_alpha = build_vdb_alpha_metric_configuration(coords, alpha_doc, beta_doc, B_doc)
 
     # Kerr metric parameters
     a_kerr = parameter_context.get("a", sp.symbols("a", real=True))  # spin parameter
@@ -205,6 +207,13 @@ def build_builtin_metric_library(coords, parameter_context=None):
             "metric_description": warp_doc_variant_b["description"],
             "g_inv_metric": None,
             "e_tetrad": warp_doc_variant_b["e_tetrad"],
+        },
+        "warp_doc_variant_b_alpha": {
+            "g_metric": warp_doc_variant_b_alpha["g_metric"],
+            "metric_name": warp_doc_variant_b_alpha["metric_name"],
+            "metric_description": warp_doc_variant_b_alpha["description"],
+            "g_inv_metric": None,
+            "e_tetrad": warp_doc_variant_b_alpha["e_tetrad"],
         },
         "kerr": {
             "g_metric": Matrix([

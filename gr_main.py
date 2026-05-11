@@ -93,6 +93,7 @@ AVAILABLE_METRIC_KEYS = list_builtin_metric_keys()
 #   warp_doc_baseline
 #   warp_doc_variant_a
 #   warp_doc_variant_b
+#   warp_doc_variant_b_alpha
 # Recommended first run: start with 'schwarzschild' to verify your environment.
 METRIC_KEY = 'schwarzschild'
 

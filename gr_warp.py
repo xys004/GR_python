@@ -126,6 +126,49 @@ def build_metric_configuration(variant, coords, beta_expr, B_expr=None):
     }
 
 
+def build_vdb_alpha_metric_configuration(coords, alpha_expr, beta_expr, B_expr):
+    """
+    Construct the generalized VdB / PG metric with lapse alpha(r):
+
+        ds^2 = -alpha(r)^2 dt^2
+               + B(r)^2[(dr - beta(r) dt)^2 + r^2 dOmega^2].
+
+    The returned tetrad is the natural Eulerian/ADM frame adapted to the
+    t = const slicing.
+    """
+    _t, r, theta, _phi = coords
+    angular = r**2 * sin(theta) ** 2
+
+    g_metric = Matrix(
+        [
+            [-(alpha_expr**2) + B_expr**2 * beta_expr**2, -B_expr**2 * beta_expr, 0, 0],
+            [-B_expr**2 * beta_expr, B_expr**2, 0, 0],
+            [0, 0, B_expr**2 * r**2, 0],
+            [0, 0, 0, B_expr**2 * angular],
+        ]
+    )
+    e_cov = Matrix(
+        [
+            [alpha_expr, 0, 0, 0],
+            [-B_expr * beta_expr, B_expr, 0, 0],
+            [0, 0, B_expr * r, 0],
+            [0, 0, 0, B_expr * r * sin(theta)],
+        ]
+    )
+
+    return {
+        "variant": "variant_b_alpha",
+        "g_metric": g_metric,
+        "e_cov": e_cov,
+        "e_tetrad": _coframe_to_tetrad(e_cov),
+        "metric_name": "Variant B - Full Spatial Conformal Warp Metric with Generic Lapse",
+        "description": (
+            "Static warp metric with generic lapse alpha(r), radial shift beta(r), "
+            "and Van Den Broeck conformal factor B(r) on the full spatial sector."
+        ),
+    }
+
+
 def document_stress_energy_formulas(variant, r, beta_expr, B_expr=None):
     """
     Return the document formulas for rho, p_r, p_perp and q.
@@ -249,6 +292,95 @@ def compare_document_formulas(results, variant, r, beta_expr, B_expr=None):
         "expected": expected,
         "residuals": residuals,
         "checks": checks,
+    }
+
+
+def document_vdb_alpha_formulas(r, alpha_expr, B_expr, beta_expr, v_expr=None):
+    """
+    Return symbolic formulas for the generalized VdB + generic-lapse document.
+
+    These formulas use GR_python's orthonormal-frame convention:
+        8*pi*j_hat{r} = -(2*beta/(alpha*B))*V_tilde.
+    """
+    alpha_p = diff(alpha_expr, r)
+    alpha_pp = diff(alpha_p, r)
+    B_p = diff(B_expr, r)
+    B_pp = diff(B_p, r)
+    beta_p = diff(beta_expr, r)
+
+    A_expr = cancel(1 / r + B_p / B_expr)
+    V_expr = cancel(B_pp / B_expr - (B_p / B_expr) ** 2 + B_p / (r * B_expr))
+    V_tilde = cancel(V_expr - (alpha_p / alpha_expr) * A_expr)
+
+    R3 = cancel(2 * (-2 * r * B_expr * B_pp + r * B_p**2 - 4 * B_expr * B_p) / (r * B_expr**4))
+    rho_B = cancel(R3 / (16 * pi))
+
+    K_trace = cancel(-(beta_p + 2 * beta_expr / r + 3 * (B_p / B_expr) * beta_expr) / alpha_expr)
+    K_sq = cancel(
+        (
+            (beta_p + (B_p / B_expr) * beta_expr) ** 2
+            + 2 * (beta_expr / r + (B_p / B_expr) * beta_expr) ** 2
+        )
+        / alpha_expr**2
+    )
+
+    rho = cancel(
+        (
+            (beta_expr**2 / r**2 + 2 * beta_expr * beta_p / r)
+            + (
+                2 * (B_p / B_expr) * beta_expr * beta_p
+                + 4 * (B_p / B_expr) * beta_expr**2 / r
+                + 3 * (B_p / B_expr) ** 2 * beta_expr**2
+            )
+        )
+        / alpha_expr**2
+        + (B_p**2 / B_expr**4 - 2 * B_pp / B_expr**3 - 4 * B_p / (r * B_expr**3))
+    ) / (8 * pi)
+
+    j_r = cancel((-2 * beta_expr / (alpha_expr * B_expr)) * V_tilde) / (8 * pi)
+    rho_plus_pr = cancel(-2 * (beta_expr**2 / alpha_expr**2 + 1 / B_expr**2) * V_tilde) / (8 * pi)
+    p_perp_B = cancel((V_expr + (alpha_pp + alpha_p / r) / alpha_expr) / B_expr**2) / (8 * pi)
+
+    if v_expr is None:
+        v_expr = sp.symbols("v", real=True)
+    gamma_sq = cancel(1 / (1 - v_expr**2))
+    boosted_sum_factorized = cancel(
+        -2
+        * gamma_sq
+        * V_tilde
+        * (
+            (beta_expr / alpha_expr - v_expr / B_expr) ** 2
+            + (v_expr * beta_expr / alpha_expr - 1 / B_expr) ** 2
+        )
+    ) / (8 * pi)
+
+    alpha_magic = cancel(1 + r * B_p / B_expr)
+    u_expr = beta_expr**2
+    u_ode_lhs = cancel(diff(u_expr, r) + (3 * B_p / B_expr + 1 / r) * u_expr)
+    u_ode_rhs = cancel(8 * pi * (rho - rho_B) * alpha_expr**2 / A_expr)
+    first_integral_lhs = cancel(diff(u_expr * r * B_expr**3, r))
+    first_integral_rhs = cancel(
+        r**2 * B_expr**4 * 8 * pi * (rho - rho_B) * alpha_expr**2 / diff(r * B_expr, r)
+    )
+
+    return {
+        "A": A_expr,
+        "V": V_expr,
+        "V_tilde": V_tilde,
+        "R3": R3,
+        "rho_B": rho_B,
+        "K": K_trace,
+        "K_sq": K_sq,
+        "rho": rho,
+        "j_r": j_r,
+        "rho_plus_pr": rho_plus_pr,
+        "p_perp_B": p_perp_B,
+        "boosted_sum_factorized": boosted_sum_factorized,
+        "alpha_magic": alpha_magic,
+        "u_ode_lhs": u_ode_lhs,
+        "u_ode_rhs": u_ode_rhs,
+        "first_integral_lhs": first_integral_lhs,
+        "first_integral_rhs": first_integral_rhs,
     }
 
 

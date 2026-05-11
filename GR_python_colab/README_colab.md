@@ -16,15 +16,17 @@ If you are local or in Google Cloud, start from `gr_main.py` / `gr_calculator.py
 
 ## Files
 
+The notebook lives in this folder, while the shared engine modules live in the repository root. Cell 2 adds both locations to `sys.path`, so Colab can import the notebook helpers and the root modules consistently.
+
 | File | Purpose |
 |---|---|
 | `GR_Colab.ipynb` | Main notebook |
-| `gr_main.py` | Local driver and configuration |
-| `gr_metric_library.py` | Built-in metric registry |
-| `gr_tensors.py` | Symbolic tensor engine |
-| `gr_latex.py` | LaTeX report assembly |
-| `gr_numerics.py` | Numerical evaluation and plotting |
-| `gr_warp.py` | Warp-document helpers and comparisons |
+| `../gr_main.py` | Local driver and configuration |
+| `../gr_metric_library.py` | Built-in metric registry |
+| `../gr_tensors.py` | Symbolic tensor engine |
+| `../gr_latex.py` | LaTeX report assembly |
+| `gr_numerics.py` | Numerical evaluation and plotting for notebook cells |
+| `../gr_warp.py` | Warp-document helpers and comparisons |
 
 ## Colab Use Step by Step
 
@@ -82,6 +84,8 @@ Two commented examples are already included in [gr_main.py](../gr_main.py):
 - a metric with a `dt dr` cross-term
 
 Reusable built-in metrics are stored in [gr_metric_library.py](../gr_metric_library.py). Useful examples include Schwarzschild, Reissner-Nordstrom, static de Sitter, a Morris-Thorne wormhole template, and the built-in `warp_doc_*` variants from your document.
+
+The current warp-document keys include `warp_doc_baseline`, `warp_doc_variant_a`, `warp_doc_variant_b`, and `warp_doc_variant_b_alpha`. The last one is the full-spatial VdB/PG metric with a generic lapse `alpha(r)`.
 
 For a first numerical demo in Colab, switch Cell 3 to `PROFILE_MODE = 'schwarzschild_pg'`.
 
