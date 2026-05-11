@@ -289,8 +289,8 @@ def _draw_kerr(ax):
     _draw_line(ax, (0,0), (0.5,0.25),  _COLORS['cauchy'], lw=2, ls='--')
     _draw_line(ax, (0,0), (-0.5,0.25), _COLORS['cauchy'], lw=2, ls='--')
     # Static limit (ergosphere boundary)
-    _draw_line(ax, (0,0), (0.75,0.5),  _COLORS['region_ergo'][:-2]+'00',
-               color='goldenrod', lw=1.5, ls=':', label='static limit')
+    _draw_line(ax, (0,0), (0.75,0.5), color='goldenrod',
+               lw=1.5, ls=':', label='static limit')
 
     _label(ax, 0.8, 0.6, 'I\n(exterior)', fontsize=7)
     _label(ax, 0.3, 0.3, 'ergo',          fontsize=6, color='#997700')

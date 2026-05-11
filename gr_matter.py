@@ -233,16 +233,17 @@ def compute_maxwell_stress_energy(F, g, ginv, coords, dim=4):
     progress(f"  F_{{αβ}} F^{{αβ}} = {F_sq}")
 
     # T_{μν} = F_{μα} F_ν^α − (1/4) g_{μν} F_{αβ} F^{αβ}
-    # F_ν^α = g^{αβ} F_{νβ}  (raise second index)
+    # F_ν^α = g^{αβ} F_{νβ}  (raise the second index of F_{νβ}).
     T = zeros(dim)
     for mu in range(dim):
         for nu in range(dim):
             term1 = S.Zero
             for a in range(dim):
-                # F^{α}_{ν} = g^{αβ} F_{βν}
+                # Keep the index order F_{νβ}; using F_{βν} flips the sign
+                # by antisymmetry and breaks the traceless Maxwell identity.
                 F_nu_up_a = S.Zero
                 for b in range(dim):
-                    F_nu_up_a += ginv[a, b] * F[b, nu]
+                    F_nu_up_a += ginv[a, b] * F[nu, b]
                 term1 += F[mu, a] * cancel(F_nu_up_a)
             term2 = Rational(1, 4) * g[mu, nu] * F_sq
             T[mu, nu] = cancel(term1 - term2)

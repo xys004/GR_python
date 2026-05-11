@@ -236,19 +236,191 @@ Resultado esperado:
 </details>
 
 <details>
+<summary>Petrov / Newman-Penrose</summary>
+
+```python
+import sympy as sp
+from gr_metric_library import select_metric
+from gr_tensors import (
+    compute_christoffel, compute_riemann, compute_ricci,
+    compute_ricci_scalar, compute_weyl, compute_tetrad_adm,
+)
+from gr_petrov import build_np_tetrad, compute_weyl_scalars, classify_petrov
+
+t, r, theta, phi = sp.symbols("t r theta phi", real=True)
+M = sp.symbols("M", positive=True)
+coords = [t, r, theta, phi]
+cfg = select_metric("schwarzschild", coords, {"M": M})
+g = cfg["g_metric"]
+ginv = cfg["g_inv_metric"] or g.inv()
+
+Gamma = compute_christoffel(g, ginv, coords)
+Riem = compute_riemann(Gamma, coords)
+Ric = compute_ricci(Riem)
+R = compute_ricci_scalar(Ric, ginv)
+C = compute_weyl(Riem, Ric, g, ginv, R)
+e_contra, *_ = compute_tetrad_adm(g, ginv, coords)
+np_tetrad = build_np_tetrad(e_contra)
+psi = compute_weyl_scalars(C, np_tetrad, g)
+print(psi["Psi2"])
+print(classify_petrov(psi)["type"])
+```
+
+Resultado esperado:
+
+- `Psi2 = -M/r**3`.
+- Tipo de Petrov `D`.
+
+</details>
+
+<details>
+<summary>Horizontes de Kerr</summary>
+
+```python
+import sympy as sp
+from gr_metric_library import select_metric
+from gr_horizons import find_horizons
+
+t, r, theta, phi = sp.symbols("t r theta phi", real=True)
+M, a = sp.symbols("M a", positive=True)
+coords = [t, r, theta, phi]
+cfg = select_metric("kerr", coords, {"M": M, "a": a})
+g = cfg["g_metric"]
+ginv = cfg["g_inv_metric"] or g.inv()
+h = find_horizons(g, ginv, coords)
+print(h["horizon_roots"])
+print(h["static_limit_roots"])
+```
+
+Resultado esperado:
+
+- `r_+ = M + sqrt(M**2 - a**2)`.
+- `r_- = M - sqrt(M**2 - a**2)`.
+- En el plano ecuatorial, limite estatico `[2*M]`.
+
+</details>
+
+<details>
+<summary>Geodesica numerica corta</summary>
+
+```python
+import math
+import sympy as sp
+from gr_metric_library import select_metric
+from gr_tensors import compute_christoffel
+from gr_geodesic_numeric import (
+    lambdify_christoffel, lambdify_metric,
+    integrate_geodesic, check_conserved,
+)
+
+t, r, theta, phi = sp.symbols("t r theta phi", real=True)
+M = sp.symbols("M", positive=True)
+coords = [t, r, theta, phi]
+cfg = select_metric("schwarzschild", coords, {"M": M})
+g = cfg["g_metric"]
+ginv = cfg["g_inv_metric"] or g.inv()
+Gamma = compute_christoffel(g, ginv, coords)
+
+Gamma_num, remaining = lambdify_christoffel(Gamma, coords, parameter_subs={M: 1.0})
+g_num, ginv_num = lambdify_metric(g, ginv, coords, parameter_subs={M: 1.0})
+
+r0 = 10.0
+u_t = 1.0 / math.sqrt(1.0 - 3.0 / r0)
+u_phi = math.sqrt(1.0 / r0**3) * u_t
+sol = integrate_geodesic(
+    Gamma_num, [0.0, r0, math.pi/2, 0.0], [u_t, 0.0, 0.0, u_phi],
+    (0.0, 50.0), rtol=1e-8, atol=1e-10, max_step=1.0,
+)
+diag = check_conserved(sol, g_num, ginv_num, killing_indices=[0, 3])
+print(sol.success)
+print(diag["norm_drift"])
+```
+
+Resultado esperado:
+
+- Integracion exitosa.
+- Deriva de la norma muy pequena.
+
+</details>
+
+<details>
+<summary>Maxwell / Reissner-Nordstrom</summary>
+
+```python
+import sympy as sp
+from gr_metric_library import select_metric
+from gr_matter import build_faraday_tensor, compute_maxwell_stress_energy
+
+t, r, theta, phi = sp.symbols("t r theta phi", real=True)
+Q = sp.symbols("Q", real=True)
+coords = [t, r, theta, phi]
+cfg = select_metric("reissner_nordstrom", coords, {"Q": Q})
+g = cfg["g_metric"]
+ginv = cfg["g_inv_metric"] or g.inv()
+F = build_faraday_tensor([Q/r, 0, 0, 0], coords)
+T = compute_maxwell_stress_energy(F, g, ginv, coords)
+print(F[0, 1], F[1, 0])
+print(T["T_trace"])
+```
+
+Resultado esperado:
+
+- `F_01 = Q/r**2`.
+- `F_10 = -Q/r**2`.
+- La traza de Maxwell es cero en 4D.
+
+</details>
+
+<details>
+<summary>ADM 3+1 de FLRW plano</summary>
+
+```python
+import sympy as sp
+from gr_metric_library import select_metric
+from gr_tensors import compute_christoffel
+from gr_adm31 import extract_adm_variables, compute_extrinsic_curvature
+
+t, r, theta, phi = sp.symbols("t r theta phi", real=True)
+coords = [t, r, theta, phi]
+cfg = select_metric("frw_flat", coords)
+g = cfg["g_metric"]
+ginv = cfg["g_inv_metric"] or g.inv()
+Gamma = compute_christoffel(g, ginv, coords)
+adm = extract_adm_variables(g, ginv, coords)
+K = compute_extrinsic_curvature(g, ginv, Gamma, coords, adm)
+print(adm["N"])
+print(adm["beta_contra"])
+print(sp.simplify(K["K_trace"]))
+```
+
+Resultado esperado:
+
+- `N = 1`.
+- `beta^i = [0, 0, 0]`.
+- Con la convencion ADM de GR_python, `K = -3*a'(t)/a(t)`.
+
+</details>
+
+<details>
 <summary>Diagramas de Penrose</summary>
 
 ```python
-from gr_penrose import list_penrose_spacetimes, draw_penrose_diagram
+from gr_penrose import (
+    list_penrose_spacetimes,
+    draw_penrose_diagram,
+    draw_all_penrose_diagrams,
+)
 
 print(list_penrose_spacetimes())
 fig = draw_penrose_diagram("schwarzschild", output_path="penrose_schwarzschild.pdf")
+panel = draw_all_penrose_diagrams(output_path="all_penrose.pdf", show=False)
 ```
 
 Resultado esperado:
 
 - Lista de plantillas disponibles.
 - Un PDF/figura cualitativa del diagrama elegido.
+- Un panel 2x3 con las seis plantillas principales.
 
 </details>
 
@@ -268,11 +440,10 @@ python gr_help.py validate
 Resultado esperado:
 
 ```text
-Help example checks passed: 11/11
+Help example checks passed: N/N
 ```
 
 Si algun ejemplo falla, eso indica que la documentacion y el codigo dejaron de
 estar sincronizados.
 
 </details>
-

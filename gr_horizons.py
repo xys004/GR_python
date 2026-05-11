@@ -39,6 +39,41 @@ def _inner(g, u, v, dim):
     return cancel(s)
 
 
+def _sort_radial_roots(roots):
+    """
+    Sort symbolic horizon roots with the largest radius first when possible.
+
+    SymPy cannot always compare roots like M - sqrt(M**2 - a**2) and
+    M + sqrt(M**2 - a**2) symbolically. For display/reporting we use a small
+    positive sample substitution only for sorting, never for the returned roots.
+    """
+    def sample_value(expr):
+        samples = {}
+        for sym in expr.free_symbols:
+            if sym.name == "M":
+                samples[sym] = 2.0
+            elif sym.name in {"a", "Q"}:
+                samples[sym] = 1.0
+            elif sym.name == "Lambda":
+                samples[sym] = 0.01
+            elif sym.is_positive:
+                samples[sym] = 1.0
+            else:
+                samples[sym] = 0.5
+        try:
+            val = complex(expr.subs(samples).evalf())
+            if abs(val.imag) < 1e-10:
+                return (0, float(val.real), str(expr))
+            return (1, abs(val), str(expr))
+        except Exception:
+            return (2, 0.0, str(expr))
+
+    try:
+        return sorted(roots, key=sample_value, reverse=True)
+    except Exception:
+        return sorted(roots, key=sp.default_sort_key)
+
+
 # ==============================================================================
 # HORIZON DETECTION
 # ==============================================================================
@@ -94,8 +129,7 @@ def find_horizons(g, ginv, coords, dim=4):
     try:
         # Multiply through to get a polynomial form
         h_roots = solve(g_rr_inv, r)
-        h_roots = [cancel(rt) for rt in h_roots]
-        h_roots = sorted(h_roots, key=lambda x: (x.is_real, x), reverse=True)
+        h_roots = _sort_radial_roots([cancel(rt) for rt in h_roots])
     except Exception as exc:
         progress(f"  WARNING: solve() failed for horizons: {exc}")
         h_roots = []
